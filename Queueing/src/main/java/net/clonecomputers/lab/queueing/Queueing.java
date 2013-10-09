@@ -30,15 +30,19 @@ public class Queueing {
 			updateTime();
 			updateState();
 		}
-		
+		printSystemState();
 	}
 
 	private void updateState() {
-		
+		//TODO Implement me
 	}
 
 	private void updateTime() {
-		
+		//TODO Implement me
+	}
+
+	private void printSystemState() {
+		//TODO Implement me
 	}
 
 	public static void main(String[] args) throws IOException {
