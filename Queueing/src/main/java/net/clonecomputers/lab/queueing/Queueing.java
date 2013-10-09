@@ -27,8 +27,17 @@ public class Queueing {
 	public void run() throws IOException {
 		System.out.println("type \"quit\" to quit");
 		while(!in.ready() && !in.readLine().trim().equalsIgnoreCase("quit")){
-			
+			updateTime();
+			updateState();
 		}
+		
+	}
+
+	private void updateState() {
+		
+	}
+
+	private void updateTime() {
 		
 	}
 
