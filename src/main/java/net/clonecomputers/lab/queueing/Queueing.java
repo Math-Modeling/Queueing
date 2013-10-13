@@ -8,14 +8,15 @@ public class Queueing {
 	
 	private BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
 	
-	private Cashier[] cashiers;
+	public Cashier[] cashiers;
 	private double timeToNextCustomer;
-	private Set<Customer> customers;
-	private Queue<Customer> customersInQueue;
-	private Set<Customer> finishedCustomers;
+	public Set<Customer> customers;
+	public Queue<Customer> customersInQueue;
 
 	private double mu;
 	private double lambda;
+	
+	private Stats stats;
 
 	public void setup() throws IOException {
 		System.out.println("Input how many cashiers: ");
@@ -23,29 +24,25 @@ public class Queueing {
 		for(int i = 0; i < cashiers.length; i++) cashiers[i] = new Cashier();
 		timeToNextCustomer = 0;
 		customers = new HashSet<Customer>();
-		finishedCustomers = new HashSet<Customer>();
 		customersInQueue = new LinkedList<Customer>();
 		mu = .25;
 		lambda = 5;
+		stats = new Stats();
 	}
 	
 	public void run() throws IOException {
 		System.out.println("type \"quit\" to quit");
-		while(!in.ready() && !in.readLine().trim().equalsIgnoreCase("quit")){
+		while(!in.ready() || !in.readLine().trim().equalsIgnoreCase("quit")){
 			double intervalLength = howLongCurrentStateWillLast();
 			updateTime(intervalLength);
 			updateState();
-			updateStats(intervalLength);
+			stats.update(intervalLength, this);
 		}
 		printSystemState();
 	}
 
-	private void updateStats(double intervalLength) {
-		//TODO: implement me
-	}
-
 	private void printSystemState() {
-		//TODO Implement me
+		stats.printStats();
 	}
 
 	private void updateState() {
@@ -54,13 +51,15 @@ public class Queueing {
 			customersInQueue.add(c);
 			c.inQueue = true;
 			timeToNextCustomer = randomCustomerInterval();
+			//System.out.println("added customer, next in "+timeToNextCustomer);
 		}
 		for(Cashier c: cashiers){
-			if(c.howLongUntilDone == 0){
+			if(c.howLongUntilDone <= 0 && c.currentCustomer != null){
 				c.currentCustomer.atCheckout = false;
 				customers.remove(c.currentCustomer);
-				finishedCustomers.add(c.currentCustomer);
+				stats.finishedCustomers.add(c.currentCustomer);
 				c.currentCustomer = null;
+				//System.out.println("removed customer from "+c.id);
 			}
 			if(c.currentCustomer == null){
 				c.currentCustomer = customersInQueue.poll();
@@ -68,23 +67,24 @@ public class Queueing {
 					c.currentCustomer.inQueue = false;
 					c.currentCustomer.atCheckout = true;
 					c.howLongUntilDone = randomCashierTime();
+					//System.out.println("added customer to "+c.id+" for "+c.howLongUntilDone);
 				}
 			}
 		}
 	}
 
 	private double randomCashierTime() {
-		return -log(random()/mu);
+		return -log(random())/mu;
 	}
 
 	private double randomCustomerInterval() {
-		return -log(random()/lambda);
+		return -log(random())/lambda;
 	}
 
 	private void updateTime(double howFarToAdvance) {
 		timeToNextCustomer -= howFarToAdvance;
 		for(Cashier c: cashiers){
-			if(c.currentCustomer == null){
+			if(c.currentCustomer != null){
 				c.howLongUntilDone -= howFarToAdvance;
 			}
 		}
@@ -96,7 +96,7 @@ public class Queueing {
 	private double howLongCurrentStateWillLast() {
 		double minTimeInCurrentState = timeToNextCustomer;
 		for(Cashier c: cashiers){
-			if(c.currentCustomer == null){
+			if(c.currentCustomer != null){
 				if(c.howLongUntilDone < minTimeInCurrentState){
 					minTimeInCurrentState = c.howLongUntilDone;
 				}
