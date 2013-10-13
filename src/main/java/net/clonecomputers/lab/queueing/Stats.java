@@ -7,7 +7,13 @@ public class Stats {
 	public double averageQueueLength = 0;
 	public double totalTime = 0;
 	
-	public void update(double timeLength, Queueing queueing){
+	private Queueing queueing;
+	
+	public Stats(Queueing queueing){
+		this.queueing = queueing;
+	}
+	
+	public void update(double timeLength){
 		if(timeLength == 0) return;
 		averageQueueLength = weightedAverage(averageQueueLength,totalTime,
 				queueing.customersInQueue.size(),timeLength);
@@ -30,7 +36,42 @@ public class Stats {
 		return weightedSum / sumOfWeights;
 	}
 
+	public double averageQueueLength(){
+		return averageQueueLength;
+	}
+	
+	public double averageTimeSpentInSupermarket(){
+		double totalTimeInQueue = 0;
+		for(Customer c: finishedCustomers){
+			totalTimeInQueue += c.timeSpentInSupermarket;
+		}
+		return totalTimeInQueue / finishedCustomers.size();
+	}
+	
+	public double averageTimeSpentInQueue(){
+		double totalTimeInQueue = 0;
+		for(Customer c: finishedCustomers){
+			totalTimeInQueue += c.timeSpentInQueue;
+		}
+		return totalTimeInQueue / finishedCustomers.size();
+	}
+	
+	public double averageTimeSpentAtCheckout(){
+		double totalTimeInQueue = 0;
+		for(Customer c: finishedCustomers){
+			totalTimeInQueue += c.timeSpentAtCheckout;
+		}
+		return totalTimeInQueue / finishedCustomers.size();
+	}
+	
 	public void printStats() {
-		System.out.println(averageQueueLength);
+		System.out.println("Average queue length: " + averageQueueLength());
+		double s = averageTimeSpentInSupermarket(),
+				q = averageTimeSpentInQueue(),
+				c = averageTimeSpentAtCheckout();
+		System.out.println("Average time spent in supermarket: " + s);
+		System.out.println("Average time spent in queue: " + q);
+		System.out.println("Average time spent at checkout: " + c);
+		System.out.println("Average time spent in store: " + (s+q+c));
 	}
 }

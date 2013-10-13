@@ -18,25 +18,39 @@ public class Queueing {
 	
 	private Stats stats;
 
+	private boolean extraTime;
+
 	public void setup() throws IOException {
 		System.out.println("Input how many cashiers: ");
 		cashiers = new Cashier[Integer.parseInt(in.readLine().trim())];
+		System.out.println("Should I add extra time for queue length? (Y/n)");
+		extraTime = isTrue(in.readLine().trim(),true);
 		for(int i = 0; i < cashiers.length; i++) cashiers[i] = new Cashier();
 		timeToNextCustomer = 0;
 		customers = new HashSet<Customer>();
 		customersInQueue = new LinkedList<Customer>();
 		mu = .25;
 		lambda = 5;
-		stats = new Stats();
+		stats = new Stats(this);
 	}
 	
+	private boolean isTrue(String s, boolean defaultValue) {
+		if(defaultValue == false){
+			return s.equalsIgnoreCase("y") || s.equalsIgnoreCase("yes") ||
+					s.equalsIgnoreCase("t") || s.equalsIgnoreCase("true");
+		}else{
+			return !(s.equalsIgnoreCase("n") || s.equalsIgnoreCase("no") ||
+					s.equalsIgnoreCase("f") || s.equalsIgnoreCase("false"));
+		}
+	}
+
 	public void run() throws IOException {
 		System.out.println("type \"quit\" to quit");
 		while(!in.ready() || !in.readLine().trim().equalsIgnoreCase("quit")){
 			double intervalLength = howLongCurrentStateWillLast();
 			updateTime(intervalLength);
 			updateState();
-			stats.update(intervalLength, this);
+			stats.update(intervalLength);
 		}
 		printSystemState();
 	}
@@ -48,10 +62,18 @@ public class Queueing {
 	private void updateState() {
 		if(timeToNextCustomer == 0){
 			Customer c = new Customer();
-			customersInQueue.add(c);
-			c.inQueue = true;
+			customers.add(c);
+			c.inSupermarket = true;
+			c.timeLeftInSupermarket = supermarketTime();
 			timeToNextCustomer = randomCustomerInterval();
-			//System.out.println("added customer, next in "+timeToNextCustomer);
+		}
+		for(Customer c: customers){
+			if(c.timeLeftInSupermarket == 0 && c.inSupermarket){
+				c.inSupermarket = false;
+				c.inQueue = true;
+				customersInQueue.add(c);
+				c.inQueue = true;
+			}
 		}
 		for(Cashier c: cashiers){
 			if(c.howLongUntilDone <= 0 && c.currentCustomer != null){
@@ -73,6 +95,14 @@ public class Queueing {
 		}
 	}
 
+	private double supermarketTime() {
+		if(extraTime){
+			return 15 + customersInQueue.size()/5.0;
+		}else{
+			return 15;
+		}
+	}
+
 	private double randomCashierTime() {
 		return -log(random())/mu;
 	}
@@ -89,7 +119,12 @@ public class Queueing {
 			}
 		}
 		for(Customer c: customers){
-			c.totalTimeSoFar += howFarToAdvance;
+			if(c.atCheckout) c.timeSpentAtCheckout += howFarToAdvance;
+			else if(c.inQueue) c.timeSpentInQueue += howFarToAdvance;
+			else if(c.inSupermarket){
+				c.timeSpentInSupermarket += howFarToAdvance;
+				c.timeLeftInSupermarket -= howFarToAdvance;
+			}else System.err.println(c+" in wrong set");
 		}
 	}
 
@@ -99,6 +134,13 @@ public class Queueing {
 			if(c.currentCustomer != null){
 				if(c.howLongUntilDone < minTimeInCurrentState){
 					minTimeInCurrentState = c.howLongUntilDone;
+				}
+			}
+		}
+		for(Customer c: customers){
+			if(c.inSupermarket){
+				if(c.timeLeftInSupermarket < minTimeInCurrentState){
+					minTimeInCurrentState = c.timeLeftInSupermarket;
 				}
 			}
 		}
