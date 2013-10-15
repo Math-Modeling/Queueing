@@ -1,9 +1,27 @@
-Queueing
-========
+#Queueing
 
-Queueing simulation
+---
+###Description:
+This project contains two programs: one simulates lines in a supermarket and outputs raw data
+and another that reads the raw data and analyzes it.
 
-##Stuff to add
-* Graphs (how?)
-* idle time
-* 
+---
+###Goals:
+####Completed:
+* Readme
+* Simulation program works
+
+####Simulation Goals:
+#####Short Term:
+* Output data as CSV
+
+#####Long Term:
+* None yet...
+
+####Analysis Goals:
+#####Short Term:
+* Read and parse data from CSV
+* How often a cashier idle
+* How often are there more than user specified *n* people in the queue
+* How often is the interarrival time more than user specified *t* time
+* How often does a cashier take more than a user specified *t* time
