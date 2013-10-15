@@ -1,7 +1,9 @@
-package net.clonecomputers.lab.queueing;
+package net.clonecomputers.lab.queueing.generate;
 
 import java.io.*;
 import java.util.*;
+
+//import net.clonecomputers.lab.queueing.calculate.*;
 import static java.lang.Math.*;
 
 public class Queueing {
@@ -16,7 +18,7 @@ public class Queueing {
 	private double mu;
 	private double lambda;
 	
-	private Stats stats;
+	//private Stats stats;
 
 	private boolean extraTime;
 
@@ -31,7 +33,7 @@ public class Queueing {
 		customersInQueue = new LinkedList<Customer>();
 		mu = .25;
 		lambda = 5;
-		stats = new Stats(this);
+		//stats = new Stats(this);
 	}
 	
 	private boolean isTrue(String s, boolean defaultValue) {
@@ -50,14 +52,14 @@ public class Queueing {
 			double intervalLength = howLongCurrentStateWillLast();
 			updateTime(intervalLength);
 			updateState();
-			stats.update(intervalLength);
+			//stats.update(intervalLength);
 		}
-		printSystemState();
+		//printSystemState();
 	}
 
-	private void printSystemState() {
+	/*private void printSystemState() {
 		stats.printStats();
-	}
+	}*/
 
 	private void updateState() {
 		if(timeToNextCustomer == 0){
@@ -79,7 +81,7 @@ public class Queueing {
 			if(c.howLongUntilDone <= 0 && c.currentCustomer != null){
 				c.currentCustomer.atCheckout = false;
 				customers.remove(c.currentCustomer);
-				stats.finishedCustomers.add(c.currentCustomer);
+				//stats.finishedCustomers.add(c.currentCustomer);
 				c.currentCustomer = null;
 				//System.out.println("removed customer from "+c.id);
 			}

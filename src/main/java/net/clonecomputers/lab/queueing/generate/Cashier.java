@@ -1,4 +1,4 @@
-package net.clonecomputers.lab.queueing;
+package net.clonecomputers.lab.queueing.generate;
 
 public class Cashier {
 	private static int globalID = 0;

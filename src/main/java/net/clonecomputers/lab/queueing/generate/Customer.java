@@ -1,4 +1,4 @@
-package net.clonecomputers.lab.queueing;
+package net.clonecomputers.lab.queueing.generate;
 
 public class Customer implements Comparable<Customer> {
 	private static int globalID = 0;

@@ -1,6 +1,8 @@
-package net.clonecomputers.lab.queueing;
+package net.clonecomputers.lab.queueing.calculate;
 
 import java.util.*;
+
+import net.clonecomputers.lab.queueing.generate.*;
 
 public class Stats {
 	public Set<Customer> finishedCustomers = new HashSet<Customer>();
@@ -69,9 +71,10 @@ public class Stats {
 		double s = averageTimeSpentInSupermarket(),
 				q = averageTimeSpentInQueue(),
 				c = averageTimeSpentAtCheckout();
-		System.out.println("Average time spent in supermarket: " + s);
+		System.out.println("Average time spent shopping: " + s);
 		System.out.println("Average time spent in queue: " + q);
 		System.out.println("Average time spent at checkout: " + c);
 		System.out.println("Average time spent in store: " + (s+q+c));
+		System.out.println("Simulated "+finishedCustomers.size()+" customers");
 	}
 }
