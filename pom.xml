@@ -21,8 +21,47 @@
       <version>3.8.1</version>
       <scope>test</scope>
     </dependency>
+    <dependency>
+	  <groupId>org.apache.commons</groupId>
+	  <artifactId>commons-csv</artifactId>
+	  <version>1.0-SNAPSHOT</version>
+	</dependency>
   </dependencies>
+  
+  <repositories>
+  	<repository>
+  	  <id>thirdparty</id>
+  	  <url>http://gavin.clonecomputers.net:8081/nexus/content/repositories/thirdparty/</url>
+  	</repository>
+  </repositories>
+  
   <organization>
   	<url>lab.clonecomputers.net</url>
   </organization>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-shade-plugin</artifactId>
+        <version>2.1</version>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <goals>
+              <goal>shade</goal>
+            </goals>
+            <configuration>
+              <artifactSet>
+                <includes>
+                  <include>org.apache.commmons:commons-csv</include>
+                </includes>
+              </artifactSet>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+  
 </project>
