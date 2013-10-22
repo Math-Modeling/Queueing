@@ -3,7 +3,6 @@ package net.clonecomputers.lab.queueing.generate;
 import java.io.*;
 import java.util.*;
 
-//import net.clonecomputers.lab.queueing.calculate.*;
 import static java.lang.Math.*;
 
 public class Queueing {
@@ -14,15 +13,19 @@ public class Queueing {
 	private double timeToNextCustomer;
 	public Set<Customer> customers;
 	public Queue<Customer> customersInQueue;
-
-	private double mu;
-	private double lambda;
 	
-	//private Stats stats;
+	private CSVExport csv;
 
-	private boolean extraTime;
+	public double mu;
+	public double lambda;
+
+	public boolean extraTime;
+	
+	public long maxIterations;
 
 	public void setup() throws IOException {
+		System.out.println("Input how many steps to run");
+		maxIterations = Long.parseLong(in.readLine().trim());
 		System.out.println("Input how many cashiers: ");
 		cashiers = new Cashier[Integer.parseInt(in.readLine().trim())];
 		System.out.println("Should I add extra time for queue length? (Y/n)");
@@ -33,7 +36,8 @@ public class Queueing {
 		customersInQueue = new LinkedList<Customer>();
 		mu = .25;
 		lambda = 5;
-		//stats = new Stats(this);
+		csv = new CSVExport(this);
+		csv.startCSV(in);
 	}
 	
 	private boolean isTrue(String s, boolean defaultValue) {
@@ -47,19 +51,13 @@ public class Queueing {
 	}
 
 	public void run() throws IOException {
-		System.out.println("type \"quit\" to quit");
-		while(!in.ready() || !in.readLine().trim().equalsIgnoreCase("quit")){
+		for(long i = 0; i < maxIterations; i++){
 			double intervalLength = howLongCurrentStateWillLast();
 			updateTime(intervalLength);
 			updateState();
-			//stats.update(intervalLength);
+			csv.record(intervalLength);
 		}
-		//printSystemState();
 	}
-
-	/*private void printSystemState() {
-		stats.printStats();
-	}*/
 
 	private void updateState() {
 		if(timeToNextCustomer == 0){
@@ -149,9 +147,14 @@ public class Queueing {
 		return minTimeInCurrentState;
 	}
 
+	private void finish() throws IOException {
+		csv.finishCSV();
+	}
+
 	public static void main(String[] args) throws IOException {
 		Queueing q = new Queueing();
 		q.setup();
 		q.run();
+		q.finish();
 	}
 }
