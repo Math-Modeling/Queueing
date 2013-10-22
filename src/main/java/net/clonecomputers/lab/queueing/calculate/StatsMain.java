@@ -6,7 +6,11 @@ import java.awt.Container;
 import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.util.HashSet;
 import java.util.Set;
@@ -25,6 +29,9 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVParser;
+import org.apache.commons.csv.CSVRecord;
 import org.reflections.Reflections;
 
 public class StatsMain extends JFrame {
@@ -108,8 +115,35 @@ public class StatsMain extends JFrame {
 		setVisible(true);
 	}
 	
-	private void loadCsvData(File csv) {
-		//TODO
+	private void loadCsvData(File csv) throws IOException {
+		BufferedReader in = new BufferedReader(new FileReader(csv));
+		CSVParser parser = new CSVParser(in, CSVFormat.EXCEL);
+		data = null;
+		int i = 0;
+		for(CSVRecord r : parser) {
+			if(data == null) {
+				if(r.isSet("how long to run")) {
+					int length = 0;
+					try {
+						length = Integer.parseInt(r.get("how long to run"));
+					} catch(NumberFormatException e) {
+						continue;
+					}
+					data = new DataSnapshot[length];
+				}
+				continue;
+			}
+			try {
+				data[i++] = new DataSnapshot(Double.parseDouble(r.get("delta t")),
+										 	Integer.parseInt(r.get("shopping")),
+										 	Integer.parseInt(r.get("in line")),
+										 	Integer.parseInt(r.get("at checkout")));
+			} catch(NumberFormatException e) {
+				System.err.println("NAN on line " + parser.getCurrentLineNumber() + " of csv file " + csv);
+				e.printStackTrace();
+			}
+		}
+		System.out.println("Done reading CSV");
 	}
 	
 	DataSnapshot[] getData() {
@@ -127,7 +161,14 @@ public class StatsMain extends JFrame {
 	private void openData() {
 		fileChooser.setFileFilter(new FileNameExtensionFilter("*.csv", "csv"));
 		if(fileChooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
-			loadCsvData(fileChooser.getSelectedFile());
+			try {
+				loadCsvData(fileChooser.getSelectedFile());
+			} catch (FileNotFoundException e) {
+				JOptionPane.showMessageDialog(this, "Failed to find CSV file!", "Error!", JOptionPane.ERROR_MESSAGE);
+				e.printStackTrace();
+			} catch(IOException e) {
+				JOptionPane.showMessageDialog(this, "Error parsing CSV file!", "Error!", JOptionPane.ERROR_MESSAGE);
+			}
 		}
 	}
 	
