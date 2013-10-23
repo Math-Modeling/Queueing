@@ -59,7 +59,7 @@
             <configuration>
               <artifactSet>
                 <includes>
-                  <include>org.apache.commmons:commons-csv</include>
+                  <exclude>junit:junit</exclude>
                 </includes>
               </artifactSet>
             </configuration>
