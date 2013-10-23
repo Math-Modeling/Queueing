@@ -3,7 +3,6 @@ package net.clonecomputers.lab.queueing.calculate;
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Container;
-import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.BufferedReader;
@@ -22,8 +21,6 @@ import javax.swing.JFrame;
 import javax.swing.JList;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import javax.swing.JRootPane;
-import javax.swing.ListCellRenderer;
 import javax.swing.SwingUtilities;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
@@ -34,11 +31,12 @@ import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 import org.reflections.Reflections;
 
+@SuppressWarnings("serial")
 public class StatsMain extends JFrame {
 	
 	private final JFileChooser fileChooser = new JFileChooser();
 	
-	private DataSnapshot[] data = new DataSnapshot[0];
+	private SimulationData data = new SimulationData(new DataSnapshot[0]);
 	private Set<AbstractAnalyzer> analyzers;
 	private JList analyzersList;
 	private AbstractAnalyzer showing = null;
@@ -118,35 +116,43 @@ public class StatsMain extends JFrame {
 	private void loadCsvData(File csv) throws IOException {
 		BufferedReader in = new BufferedReader(new FileReader(csv));
 		CSVParser parser = new CSVParser(in, CSVFormat.EXCEL);
-		data = null;
+		DataSnapshot[] tempData = null;
 		int i = 0;
-		for(CSVRecord r : parser) {
-			if(data == null) {
-				if(r.isSet("how long to run")) {
-					int length = 0;
-					try {
-						length = Integer.parseInt(r.get("how long to run"));
-					} catch(NumberFormatException e) {
-						continue;
+		try {
+			for(CSVRecord r : parser) {
+				if(tempData == null) {
+					if(r.isSet("how long to run")) {
+						int length = 0;
+						try {
+							length = Integer.parseInt(r.get("how long to run"));
+						} catch(NumberFormatException e) {
+							continue;
+						}
+						if(length < 1) {
+							throw new IOException("how long to run must be greater than 0");
+						}
+						tempData = new DataSnapshot[length];
 					}
-					data = new DataSnapshot[length];
+					continue;
 				}
-				continue;
+				try {
+					tempData[i++] = new DataSnapshot(Double.parseDouble(r.get("delta t")),
+							Integer.parseInt(r.get("shopping")),
+							Integer.parseInt(r.get("in line")),
+							Integer.parseInt(r.get("at checkout")));
+				} catch(NumberFormatException e) {
+					System.err.println("NAN on line " + parser.getCurrentLineNumber() + " of csv file " + csv);
+					e.printStackTrace();
+				}
 			}
-			try {
-				data[i++] = new DataSnapshot(Double.parseDouble(r.get("delta t")),
-										 	Integer.parseInt(r.get("shopping")),
-										 	Integer.parseInt(r.get("in line")),
-										 	Integer.parseInt(r.get("at checkout")));
-			} catch(NumberFormatException e) {
-				System.err.println("NAN on line " + parser.getCurrentLineNumber() + " of csv file " + csv);
-				e.printStackTrace();
-			}
+			data = new SimulationData(tempData);
+		} finally {
+			parser.close();
 		}
 		System.out.println("Done reading CSV");
 	}
 	
-	DataSnapshot[] getData() {
+	SimulationData getData() {
 		return data;
 	}
 	
