@@ -10,6 +10,7 @@ and another that reads the raw data and analyzes it.
 ####Completed:
 * Readme
 * Simulation program works
+* Read and parse data from CSV
 
 ####Simulation Goals:
 #####Short Term:
@@ -20,7 +21,6 @@ and another that reads the raw data and analyzes it.
 
 ####Analysis Goals:
 #####Short Term:
-* Read and parse data from CSV
 * How often a cashier idle
 * How often are there more than user specified *n* people in the queue
 * How often is the interarrival time more than user specified *t* time
