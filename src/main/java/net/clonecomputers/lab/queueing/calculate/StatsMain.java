@@ -38,7 +38,7 @@ public class StatsMain extends JFrame {
 	
 	private final JFileChooser fileChooser = new JFileChooser();
 	
-	private SimulationData data = new SimulationData(new DataSnapshot[0]);
+	private SimulationData data = new SimulationData(new DataSnapshot[0], 0, 0, 0);
 	private Set<AbstractAnalyzer> analyzers;
 	private JList analyzersList;
 	private AbstractAnalyzer showing = null;
@@ -120,19 +120,29 @@ public class StatsMain extends JFrame {
 		BufferedReader in = new BufferedReader(new FileReader(csv));
 		CSVParser parser = new CSVParser(in, CSVFormat.EXCEL);
 		DataSnapshot[] tempData = null;
+		double lambda, mu;
+		int numCashiers = 0;
+		lambda = mu = Double.NaN;
 		int i = 0;
 		try {
 			for(CSVRecord r : parser) {
 				if(tempData == null) {
-					if(r.isSet("how long to run")) {
+					if(r.isSet("how long to run") && r.isSet("lambda") && r.isSet("mu") && r.isSet("number of cashiers")) {
 						int length = 0;
 						try {
 							length = Integer.parseInt(r.get("how long to run"));
-						} catch(NumberFormatException e) {
-							continue;
-						}
+							lambda = Double.parseDouble(r.get("lambda"));
+							mu = Double.parseDouble(r.get("mu"));
+							numCashiers = Integer.parseInt(r.get("number of cashiers"));
+						} catch(NumberFormatException e) {}
 						if(length < 1) {
-							throw new IOException("how long to run must be greater than 0");
+							throw new IOException("error parsing how long to run (must be a positve int)");
+						} else if(Double.isNaN(lambda)) {
+							throw new IOException("error parsing lambda (must be a double)");
+						} else if(Double.isNaN(mu)) {
+							throw new IOException("error parsing mu (must be a double)");
+						} else if(numCashiers < 1) {
+							throw new IOException("error parsing number of cashiers (must be a positve int)");
 						}
 						tempData = new DataSnapshot[length];
 					}
@@ -148,7 +158,7 @@ public class StatsMain extends JFrame {
 					e.printStackTrace();
 				}
 			}
-			data = new SimulationData(tempData);
+			data = new SimulationData(tempData, lambda, mu, numCashiers);
 		} finally {
 			parser.close();
 		}
