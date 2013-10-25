@@ -21,6 +21,8 @@ import javax.swing.JFrame;
 import javax.swing.JList;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.ListSelectionModel;
 import javax.swing.SwingUtilities;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
@@ -77,6 +79,7 @@ public class StatsMain extends JFrame {
 		JButton openAnalyzer = new JButton("Open Analyzer");
 		JButton openData = new JButton("Open Data");
 		analyzersList = new JList(analyzers.toArray());
+		analyzersList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		analyzersList.setCellRenderer(new DefaultListCellRenderer() {
 			
 			public Component getListCellRendererComponent(JList list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
@@ -105,7 +108,7 @@ public class StatsMain extends JFrame {
 		buttonPanel.add(openAnalyzer, BorderLayout.PAGE_START);
 		buttonPanel.add(openData, BorderLayout.PAGE_END);
 		sidePanel.add(buttonPanel, BorderLayout.PAGE_START);
-		sidePanel.add(analyzersList, BorderLayout.CENTER);
+		sidePanel.add(new JScrollPane(analyzersList), BorderLayout.CENTER);
 		contentPane.add(sidePanel, BorderLayout.LINE_START);
 		setResizable(false);
 		pack();
