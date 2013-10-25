@@ -61,7 +61,9 @@ public class StatsMain extends JFrame {
 		for(Class<? extends AbstractAnalyzer> a : analyzersInPackage) {
 			try {
 				Constructor<? extends AbstractAnalyzer> constructor = a.getConstructor();
-				analyzers.add(constructor.newInstance());
+				AbstractAnalyzer newAnalyzer = constructor.newInstance();
+				newAnalyzer.setMain(this);
+				analyzers.add(newAnalyzer);
 			} catch(NoSuchMethodException e) {
 				System.err.println(a.getSimpleName() + " needs a default constructor");
 			} catch(Exception e) {
