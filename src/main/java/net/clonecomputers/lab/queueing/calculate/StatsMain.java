@@ -11,6 +11,7 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -120,7 +121,7 @@ public class StatsMain extends JFrame {
 	
 	private void loadCsvData(File csv) throws IOException {
 		BufferedReader in = new BufferedReader(new FileReader(csv));
-		CSVParser parser = new CSVParser(in, CSVFormat.EXCEL);
+		CSVParser parser = new CSVParser(in, CSVFormat.EXCEL.withSkipHeaderRecord(true).withHeader("delta t", "shopping", "in line", "at checkout", "lambda", "mu", "number of cashiers", "how long to run"));
 		DataSnapshot[] tempData = null;
 		double lambda, mu;
 		int numCashiers = 0;
@@ -130,6 +131,7 @@ public class StatsMain extends JFrame {
 			for(CSVRecord r : parser) {
 				if(tempData == null) {
 					if(r.isSet("how long to run") && r.isSet("lambda") && r.isSet("mu") && r.isSet("number of cashiers")) {
+						System.out.println("Found simulation wide data line");
 						int length = 0;
 						try {
 							length = Integer.parseInt(r.get("how long to run"));
@@ -161,10 +163,10 @@ public class StatsMain extends JFrame {
 				}
 			}
 			data = new SimulationData(tempData, lambda, mu, numCashiers);
+			System.out.println("Done reading CSV");
 		} finally {
 			parser.close();
 		}
-		System.out.println("Done reading CSV");
 	}
 	
 	SimulationData getData() {
