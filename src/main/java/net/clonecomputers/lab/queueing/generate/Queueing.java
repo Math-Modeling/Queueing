@@ -37,7 +37,31 @@ public class Queueing {
 		mu = .25;
 		lambda = 5;
 		csv = new CSVExport(this);
-		csv.startCSV(in);
+		System.out.println("Input filepath");
+		String filepath = in.readLine().trim();
+		csv.startCSV(getWriterFromFileString(filepath));
+	}
+	
+	public BufferedWriter getWriterFromFileString(String filepath) throws IOException{
+		filepath = filepath.replace("~", System.getProperty("user.home"));
+		if(!filepath.startsWith("/") && !filepath.startsWith("~")){
+			filepath = System.getProperty("user.home") + "/" + filepath;
+		}
+		File f = new File(filepath);
+		return new BufferedWriter(new FileWriter(f));
+	}
+	
+	public void setup(long maxIterations, int howManyCashiers,
+			boolean addExtraTimeForLine, Appendable csvOutput) throws IOException {
+		
+		for(int i = 0; i < cashiers.length; i++) cashiers[i] = new Cashier();
+		timeToNextCustomer = 0;
+		customers = new HashSet<Customer>();
+		customersInQueue = new LinkedList<Customer>();
+		mu = .25;
+		lambda = 5;
+		csv = new CSVExport(this);
+		csv.startCSV(csvOutput);
 	}
 	
 	private boolean isTrue(String s, boolean defaultValue) {
@@ -57,6 +81,7 @@ public class Queueing {
 			updateState();
 			csv.record(intervalLength);
 		}
+		System.out.println("Done");
 	}
 
 	private void updateState() {
