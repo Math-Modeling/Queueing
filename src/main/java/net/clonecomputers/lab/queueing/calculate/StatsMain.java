@@ -11,7 +11,6 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -202,6 +201,7 @@ public class StatsMain extends JFrame {
 		if(a != null) {
 			getContentPane().add(a, BorderLayout.CENTER);
 		}
+		showing = a;
 		pack();
 	}
 
