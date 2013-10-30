@@ -5,15 +5,12 @@ import java.awt.Component;
 import java.awt.Container;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 import java.lang.reflect.Constructor;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.*;
 
 import javax.swing.DefaultListCellRenderer;
 import javax.swing.JButton;
@@ -34,8 +31,12 @@ import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 import org.reflections.Reflections;
 
+import net.clonecomputers.lab.queueing.generate.Queueing;
+
 @SuppressWarnings("serial")
 public class StatsMain extends JFrame {
+	
+	private ExecutorService exec = Executors.newCachedThreadPool();
 	
 	private final JFileChooser fileChooser = new JFileChooser();
 	
@@ -80,6 +81,7 @@ public class StatsMain extends JFrame {
 		JPanel sidePanel = new JPanel(new BorderLayout());
 		JPanel buttonPanel = new JPanel(new BorderLayout());
 		JButton openAnalyzer = new JButton("Open Analyzer");
+		JButton generateData = new JButton("Generate Data");
 		JButton openData = new JButton("Open Data");
 		analyzersList = new JList(analyzers.toArray());
 		analyzersList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
@@ -99,7 +101,27 @@ public class StatsMain extends JFrame {
 		openAnalyzer.addActionListener(new ActionListener() {
 			
 			public void actionPerformed(ActionEvent e) {
-				openAnalyzer();
+				exec.execute(new Runnable(){
+					@Override public void run() {
+						openAnalyzer();
+					}
+				}
+				);
+			}
+		});
+		generateData.addActionListener(new ActionListener() {
+			
+			public void actionPerformed(ActionEvent e) {
+				exec.execute(new Runnable(){
+					@Override public void run() {
+						try {
+							generateData();
+						} catch (IOException e) {
+							throw new RuntimeException(e);
+						}
+					}
+				}
+				);
 			}
 		});
 		openData.addActionListener(new ActionListener() {
@@ -109,6 +131,7 @@ public class StatsMain extends JFrame {
 			}
 		});
 		buttonPanel.add(openAnalyzer, BorderLayout.PAGE_START);
+		buttonPanel.add(generateData, BorderLayout.CENTER);
 		buttonPanel.add(openData, BorderLayout.PAGE_END);
 		sidePanel.add(buttonPanel, BorderLayout.PAGE_START);
 		sidePanel.add(new JScrollPane(analyzersList), BorderLayout.CENTER);
@@ -119,9 +142,26 @@ public class StatsMain extends JFrame {
 		setVisible(true);
 	}
 	
+	private void generateData() throws IOException{
+		File f = File.createTempFile("data", null);
+		f.deleteOnExit();
+		PrintStream pipeInput = new PrintStream(f); // FileWriter doesn't work, PrintStream does
+		Reader pipeOutput = new FileReader(f);
+		
+		Queueing q = new Queueing();
+		q.setup(pipeInput);
+		q.run();
+		
+		loadCsvData(new BufferedReader(pipeOutput));
+	}
+	
 	private void loadCsvData(File csv) throws IOException {
-		BufferedReader in = new BufferedReader(new FileReader(csv));
-		CSVParser parser = new CSVParser(in, CSVFormat.EXCEL.withSkipHeaderRecord(true).withHeader("delta t", "shopping", "in line", "at checkout", "lambda", "mu", "number of cashiers", "how long to run"));
+		loadCsvData(new BufferedReader(new FileReader(csv)));
+	}
+	
+	private void loadCsvData(Reader csvInput) throws IOException {
+		CSVParser parser = new CSVParser(csvInput, CSVFormat.EXCEL
+				.withSkipHeaderRecord(true).withHeader().withIgnoreEmptyLines(true));
 		DataSnapshot[] tempData = null;
 		double lambda, mu;
 		int numCashiers = 0;
@@ -153,12 +193,14 @@ public class StatsMain extends JFrame {
 					continue;
 				}
 				try {
-					tempData[i++] = new DataSnapshot(Double.parseDouble(r.get("delta t")),
+					tempData[i++] = new DataSnapshot(
+							Double.parseDouble(r.get("delta t")),
 							Integer.parseInt(r.get("shopping")),
 							Integer.parseInt(r.get("in line")),
-							Integer.parseInt(r.get("at checkout")));
+							Integer.parseInt(r.get("at checkout"))
+					);
 				} catch(NumberFormatException e) {
-					System.err.println("NAN on line " + parser.getCurrentLineNumber() + " of csv file " + csv);
+					System.err.println("NAN on line " + parser.getCurrentLineNumber() + " of csv file " + csvInput);
 					e.printStackTrace();
 				}
 			}
