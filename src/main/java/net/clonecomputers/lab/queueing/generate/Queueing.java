@@ -42,6 +42,23 @@ public class Queueing {
 		csv.startCSV(getWriterFromFileString(filepath));
 	}
 	
+	public void setup(Appendable csvOutput) throws NumberFormatException, IOException{
+		System.out.println("Input how many steps to run");
+		maxIterations = Long.parseLong(in.readLine().trim());
+		System.out.println("Input how many cashiers: ");
+		cashiers = new Cashier[Integer.parseInt(in.readLine().trim())];
+		System.out.println("Should I add extra time for queue length? (Y/n)");
+		extraTime = isTrue(in.readLine().trim(),true);
+		for(int i = 0; i < cashiers.length; i++) cashiers[i] = new Cashier();
+		timeToNextCustomer = 0;
+		customers = new HashSet<Customer>();
+		customersInQueue = new LinkedList<Customer>();
+		mu = .25;
+		lambda = 5;
+		csv = new CSVExport(this);
+		csv.startCSV(csvOutput);
+	}
+	
 	public BufferedWriter getWriterFromFileString(String filepath) throws IOException{
 		filepath = filepath.replace("~", System.getProperty("user.home"));
 		if(!filepath.startsWith("/") && !filepath.startsWith("~")){
