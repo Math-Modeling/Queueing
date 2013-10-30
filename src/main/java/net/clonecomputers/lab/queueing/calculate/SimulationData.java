@@ -43,7 +43,7 @@ public class SimulationData implements Iterable<DataSnapshot> {
 		private int next = 0;
 		
 		public boolean hasNext() {
-			return next < data.length;
+			return data != null && next < data.length;
 		}
 
 		public DataSnapshot next() {
