@@ -2,20 +2,20 @@ package net.clonecomputers.lab.queueing.calculate;
 
 public class DataSnapshot {
 	
-	private final double t;
+	private final double dt;
 	private final int shopping;
 	private final int queue;
 	private final int checkout;
 	
-	public DataSnapshot(double time, int customersShopping, int queueLength, int cashiersBusy) {
-		t = time;
+	public DataSnapshot(double deltaTime, int customersShopping, int queueLength, int cashiersBusy) {
+		dt = deltaTime;
 		shopping = customersShopping;
 		queue = queueLength;
 		checkout = cashiersBusy;
 	}
 
 	public double getTime() {
-		return t;
+		return dt;
 	}
 
 	public int getCustomersShopping() {
@@ -28,6 +28,11 @@ public class DataSnapshot {
 
 	public int getCashiersBusy() {
 		return checkout;
+	}
+	
+	@Override
+	public String toString(){
+		return "("+dt+","+shopping+","+queue+","+checkout+")";
 	}
 	
 }
