@@ -3,6 +3,7 @@ package net.clonecomputers.lab.queueing;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
+import java.lang.reflect.*;
 
 import javax.swing.*;
 import javax.swing.text.*;
@@ -20,7 +21,53 @@ public class JConsole extends JPanel{
 	private BufferedInputStream internalOut;
 	private BufferedInputStream internalErr;
 
+	public static void main(String[] args) throws IOException{
+		final JConsole guiConsole = new JConsole();
+		//System.setIn(guiConsole.getIn());
+		//System.setOut(guiConsole.getOut());
+		//System.setErr(guiConsole.getErr());
+		JFrame consoleWindow = new JFrame("Console");
+		consoleWindow.pack();
+		consoleWindow.setSize(800, 600);
+		consoleWindow.add(guiConsole);
+		consoleWindow.setResizable(false);
+		consoleWindow.setVisible(true);
+		consoleWindow.setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
+		
+		guiConsole.getOut().println("Hello world!");
+		guiConsole.getErr().println("Goodbye world?");
+	}
+	
 	public JConsole() throws IOException{
+		try {
+			SwingUtilities.invokeAndWait(new Runnable(){
+				@Override public void run(){
+					JConsole.this.initGUI();
+				}
+			});
+		} catch (InterruptedException e) {
+			throw new RuntimeException(e);
+		} catch (InvocationTargetException e) {
+			throw new RuntimeException(e);
+		}
+		PipedInputStream tmpIOut = new PipedInputStream();
+		PipedInputStream tmpIErr = new PipedInputStream();
+		externalOut = new PrintStream(new PipedOutputStream(tmpIOut));
+		externalErr = new PrintStream(new PipedOutputStream(tmpIErr));
+		internalOut = new BufferedInputStream(tmpIOut);
+		internalErr = new BufferedInputStream(tmpIErr);
+		new Thread(new StreamWatcher(new InputStreamReader(internalOut), textArea, Color.BLACK)).start();
+		new Thread(new StreamWatcher(new InputStreamReader(internalErr), textArea, Color.RED)).start();
+		
+		PipedInputStream tmpEIn = new PipedInputStream();
+		PipedOutputStream tmpIIn = new PipedOutputStream();
+		externalIn = new BufferedInputStream(tmpEIn);
+		internalIn = new PrintStream(tmpIIn);
+		TeeInputStream inViewer = new TeeInputStream(new PipedInputStream(tmpIIn), new PipedOutputStream(tmpEIn));
+		new Thread(new StreamWatcher(new InputStreamReader(inViewer), textArea, Color.GREEN)).start();
+	}
+
+	public void initGUI() {
 		textArea = new JTextPane();
 		textArea.setEditable(false);
 		inputField = new JTextField(80);
@@ -35,19 +82,6 @@ public class JConsole extends JPanel{
 				}
 			}
 		});
-		PipedInputStream tmpIOut = new PipedInputStream();
-		PipedInputStream tmpIErr = new PipedInputStream();
-		externalOut = new PrintStream(new PipedOutputStream(tmpIOut));
-		externalErr = new PrintStream(new PipedOutputStream(tmpIErr));
-		internalOut = new BufferedInputStream(tmpIOut);
-		internalErr = new BufferedInputStream(tmpIErr);
-		new Thread(new StreamWatcher(new InputStreamReader(internalOut), textArea, Color.BLACK)).run();
-		new Thread(new StreamWatcher(new InputStreamReader(internalErr), textArea, Color.RED)).run();
-		
-		PipedInputStream tmpEIn = new PipedInputStream();
-		PipedOutputStream tmpIIn = new PipedOutputStream();
-		TeeInputStream inViewer = new TeeInputStream(new PipedInputStream(tmpIIn), new PipedOutputStream(tmpEIn));
-		new Thread(new StreamWatcher(new InputStreamReader(inViewer), textArea, Color.GREEN)).run();
 	}
 
 	private class StreamWatcher implements Runnable {
@@ -67,7 +101,8 @@ public class JConsole extends JPanel{
 			int numChars;
 			try {
 				while((numChars = stream.read(buff)) != -1){
-					appendToPane(output, new String(buff,0,numChars), color);
+					String text = new String(buff, 0, numChars);
+					appendToPane(output, text, color);
 				}
 			} catch (IOException e) {
 				throw new RuntimeException(e);

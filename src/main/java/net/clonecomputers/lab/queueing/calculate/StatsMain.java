@@ -5,14 +5,8 @@ import java.awt.Component;
 import java.awt.Container;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.PrintStream;
-import java.io.Reader;
-import java.lang.reflect.Constructor;
+import java.io.*;
+import java.lang.reflect.*;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
@@ -32,6 +26,7 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
+import net.clonecomputers.lab.queueing.*;
 import net.clonecomputers.lab.queueing.calculate.DataSnapshot.QueueingEvent;
 import net.clonecomputers.lab.queueing.generate.Queueing;
 
@@ -125,6 +120,10 @@ public class StatsMain extends JFrame {
 							generateData();
 						} catch (IOException e) {
 							throw new RuntimeException(e);
+						} catch (InterruptedException e) {
+							throw new RuntimeException(e);
+						} catch (InvocationTargetException e) {
+							throw new RuntimeException(e);
 						}
 					}
 				}
@@ -149,15 +148,36 @@ public class StatsMain extends JFrame {
 		setVisible(true);
 	}
 	
-	private void generateData() throws IOException{
+	private void generateData() throws IOException, InterruptedException, InvocationTargetException{
 		File f = File.createTempFile("data", null);
 		f.deleteOnExit();
 		PrintStream pipeInput = new PrintStream(f); // FileWriter doesn't work, PrintStream does
 		Reader pipeOutput = new FileReader(f);
 		
+		InputStream oldIn = System.in;
+		PrintStream oldOut = System.out;
+		PrintStream oldErr = System.err;
+		
+		final JConsole guiConsole = new JConsole();
+		//System.setIn(guiConsole.getIn());
+		//System.setOut(guiConsole.getOut());
+		//System.setErr(guiConsole.getErr());
+		JFrame consoleWindow = new JFrame("Console");
+		consoleWindow.pack();
+		consoleWindow.setSize(800, 600);
+		consoleWindow.add(guiConsole);
+		consoleWindow.setResizable(false);
+		consoleWindow.setVisible(true);
+		consoleWindow.setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
+		this.repaint();
+		
 		Queueing q = new Queueing();
 		q.setup(pipeInput);
 		q.run();
+		
+		System.setIn(oldIn);
+		System.setOut(oldOut);
+		System.setErr(oldErr);
 		
 		loadCsvData(new BufferedReader(pipeOutput));
 	}
