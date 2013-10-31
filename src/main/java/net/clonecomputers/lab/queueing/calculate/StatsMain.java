@@ -5,13 +5,9 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
-<<<<<<< HEAD
 import java.lang.reflect.Constructor;
-=======
 import java.io.PrintStream;
 import java.io.Reader;
-
->>>>>>> refs/remotes/origin/gavin-temp
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
