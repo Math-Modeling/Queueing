@@ -159,9 +159,9 @@ public class StatsMain extends JFrame {
 		PrintStream oldErr = System.err;
 		
 		final JConsole guiConsole = new JConsole();
-		//System.setIn(guiConsole.getIn());
-		//System.setOut(guiConsole.getOut());
-		//System.setErr(guiConsole.getErr());
+		System.setIn(guiConsole.getIn());
+		System.setOut(guiConsole.getOut());
+		System.setErr(guiConsole.getErr());
 		JFrame consoleWindow = new JFrame("Console");
 		consoleWindow.pack();
 		consoleWindow.setSize(800, 600);
