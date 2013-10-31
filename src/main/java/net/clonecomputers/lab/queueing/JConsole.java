@@ -55,9 +55,13 @@ public class JConsole extends JPanel{
 		out.deleteOnExit();
 		err.deleteOnExit();
 		inOutput = new PrintStream(in);
-		new Thread(new StreamWatcher(new BufferedInputStream(new FileInputStream(in)), textArea, new Color(0,192,0))).start();
-		new Thread(new StreamWatcher(new BufferedInputStream(new FileInputStream(out)), textArea, Color.BLACK)).start();
-		new Thread(new StreamWatcher(new BufferedInputStream(new FileInputStream(err)), textArea, Color.RED)).start();
+		new Thread(new StreamWatcher(wrap(in), textArea, new Color(0,192,0))).start();
+		new Thread(new StreamWatcher(wrap(out), textArea, Color.BLACK)).start();
+		new Thread(new StreamWatcher(wrap(err), textArea, Color.RED)).start();
+	}
+	
+	public BufferedInputStream wrap(File f) throws FileNotFoundException{
+		return new BufferedInputStream(new IgnoreEOFInputStream(new FileInputStream(f)));
 	}
 
 	public void initGUI() {
@@ -75,6 +79,56 @@ public class JConsole extends JPanel{
 				}
 			}
 		});
+	}
+	
+	private class IgnoreEOFInputStream extends FilterInputStream{
+
+		public IgnoreEOFInputStream(InputStream in) {
+			super(in);
+		}
+		
+		@Override public int read() {
+			try {
+				while(in.available() <= 0) {
+					Thread.sleep(100);
+					continue;
+				}
+				return in.read();
+			} catch (InterruptedException e) {
+				throw new RuntimeException(e);
+			} catch (IOException e) {
+				throw new RuntimeException(e);
+			}
+		}
+		
+		@Override public int read(byte[] b) {
+			try{
+				while(in.available() <= 0){
+					Thread.sleep(100);
+					continue;
+				}
+				return in.read(b);
+			} catch (InterruptedException e) {
+				throw new RuntimeException(e);
+			} catch (IOException e) {
+				throw new RuntimeException(e);
+			}
+		}
+		
+		@Override public int read(byte[] b, int off, int len) {
+			try{
+				while(in.available() <= 0){
+					Thread.sleep(100);
+					continue;
+				}
+				return in.read(b, off, len);
+			} catch (InterruptedException e) {
+				throw new RuntimeException(e);
+			} catch (IOException e) {
+				throw new RuntimeException(e);
+			}
+		}
+		
 	}
 
 	private class StreamWatcher implements Runnable {
@@ -97,28 +151,21 @@ public class JConsole extends JPanel{
 			int numChars;
 			try {
 				while(true){
-					if(stream.available() <= 0){
-						Thread.sleep(500);
-						continue;
-					}
 					numChars = stream.read(buff);
 					String text = new String(buff, 0, numChars);
 					document.insertString(document.getLength(), text, style);
 				}
 			} catch (IOException e) {
 				throw new RuntimeException(e);
-			} catch (InterruptedException e) {
-				throw new RuntimeException(e);
 			} catch (BadLocationException e) {
 				throw new RuntimeException(e);
 			}
 		}
-
 	}
 
 	public InputStream getIn(){
 		try {
-			return new BufferedInputStream(new FileInputStream(in));
+			return wrap(in);
 		} catch (FileNotFoundException e) {
 			throw new RuntimeException(e);
 		}
