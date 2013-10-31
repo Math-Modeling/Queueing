@@ -27,7 +27,7 @@ public class JConsole extends JPanel{
 		JFrame consoleWindow = new JFrame("Console");
 		consoleWindow.pack();
 		consoleWindow.setSize(800, 600);
-		consoleWindow.add(guiConsole);
+		consoleWindow.getContentPane().add(guiConsole);
 		consoleWindow.setResizable(false);
 		consoleWindow.setVisible(true);
 		consoleWindow.setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
@@ -81,12 +81,15 @@ public class JConsole extends JPanel{
 	private class StreamWatcher implements Runnable {
 		private InputStream stream;
 		private JTextPane output;
-		private Color color;
+		private Style style;
+		private StyledDocument document;
 
 		private StreamWatcher(InputStream stream, JTextPane output, Color color) {
 			this.stream = stream;
 			this.output = output;
-			this.color = color;
+			style = output.addStyle(color.toString(), null);
+			StyleConstants.setForeground(style,color);
+			document = output.getStyledDocument();
 		}
 
 		@Override
@@ -101,26 +104,14 @@ public class JConsole extends JPanel{
 					}
 					numChars = stream.read(buff);
 					String text = new String(buff, 0, numChars);
-					appendToPane(output, text, color);
+					document.insertString(document.getLength(), text, style);
 				}
 			} catch (IOException e) {
 				throw new RuntimeException(e);
 			} catch (InterruptedException e) {
 				throw new RuntimeException(e);
-			}
-		}
-
-		private void appendToPane(JTextPane tp, String msg, Color c) {
-			StyleContext sc = StyleContext.getDefaultStyleContext();
-			AttributeSet aset = sc.addAttribute(SimpleAttributeSet.EMPTY, StyleConstants.Foreground, c);
-
-			aset = sc.addAttribute(aset, StyleConstants.FontFamily, "Lucida Console");
-			aset = sc.addAttribute(aset, StyleConstants.Alignment, StyleConstants.ALIGN_JUSTIFIED);
-			synchronized(tp){
-				int len = tp.getDocument().getLength();
-				tp.setCaretPosition(len);
-				tp.setCharacterAttributes(aset, false);
-				tp.replaceSelection(msg);
+			} catch (BadLocationException e) {
+				throw new RuntimeException(e);
 			}
 		}
 
