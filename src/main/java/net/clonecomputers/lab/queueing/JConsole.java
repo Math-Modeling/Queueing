@@ -55,7 +55,6 @@ public class JConsole extends JPanel{
 		out.deleteOnExit();
 		err.deleteOnExit();
 		inOutput = new PrintStream(in);
-		System.out.println(in.getCanonicalPath());
 		new Thread(new StreamWatcher(new BufferedInputStream(new FileInputStream(in)), textArea, Color.GREEN)).start();
 		new Thread(new StreamWatcher(new BufferedInputStream(new FileInputStream(out)), textArea, Color.BLACK)).start();
 		new Thread(new StreamWatcher(new BufferedInputStream(new FileInputStream(err)), textArea, Color.RED)).start();
