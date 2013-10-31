@@ -173,7 +173,7 @@ public class StatsMain extends JFrame {
 		double lambda, mu;
 		int numCashiers = 0;
 		lambda = mu = Double.NaN;
-		DataSnapshot lastData = new DataSnapshot(0, 0, 0, 0, null);
+		DataSnapshot lastData = null;
 		int i = 0;
 		try {
 			for(CSVRecord r : parser) {

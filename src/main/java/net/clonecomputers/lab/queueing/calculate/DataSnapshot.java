@@ -17,9 +17,9 @@ public class DataSnapshot {
 	}
 	
 	public DataSnapshot(double deltaTime, int customersShopping, int queueLength, int cashiersBusy, DataSnapshot lastData) {
-		int lastShopping = lastData.getCustomersShopping();
-		int lastQueueLength = lastData.getQueueLength();
-		int lastCashiersBusy = lastData.getCashiersBusy();
+		int lastShopping = lastData==null? 0: lastData.getCustomersShopping();
+		int lastQueueLength = lastData==null? 0: lastData.getQueueLength();
+		int lastCashiersBusy = lastData==null? 0: lastData.getCashiersBusy();
 		if(customersShopping == lastShopping + 1 && queueLength == lastQueueLength && cashiersBusy == lastCashiersBusy) {
 			event = QueueingEvent.SUPERMARKET_ARRIVE;
 		} else if(customersShopping == lastShopping - 1 && queueLength == lastQueueLength + 1 && cashiersBusy == lastCashiersBusy) {
