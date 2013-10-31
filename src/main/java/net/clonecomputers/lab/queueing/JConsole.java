@@ -14,12 +14,10 @@ import org.apache.commons.io.input.*;
 public class JConsole extends JPanel{
 	private JTextPane textArea;
 	private JTextField inputField;
-	private BufferedInputStream externalIn;
-	private PrintStream externalOut;
-	private PrintStream externalErr;
-	private PrintStream internalIn;
-	private BufferedInputStream internalOut;
-	private BufferedInputStream internalErr;
+	private File in;
+	private File out;
+	private File err;
+	private PrintStream inOutput;
 
 	public static void main(String[] args) throws IOException{
 		final JConsole guiConsole = new JConsole();
@@ -50,21 +48,17 @@ public class JConsole extends JPanel{
 		} catch (InvocationTargetException e) {
 			throw new RuntimeException(e);
 		}
-		PipedInputStream tmpIOut = new PipedInputStream();
-		PipedInputStream tmpIErr = new PipedInputStream();
-		externalOut = new PrintStream(new PipedOutputStream(tmpIOut));
-		externalErr = new PrintStream(new PipedOutputStream(tmpIErr));
-		internalOut = new BufferedInputStream(tmpIOut);
-		internalErr = new BufferedInputStream(tmpIErr);
-		new Thread(new StreamWatcher(new InputStreamReader(internalOut), textArea, Color.BLACK)).start();
-		new Thread(new StreamWatcher(new InputStreamReader(internalErr), textArea, Color.RED)).start();
-		
-		PipedInputStream tmpEIn = new PipedInputStream();
-		PipedOutputStream tmpIIn = new PipedOutputStream();
-		externalIn = new BufferedInputStream(tmpEIn);
-		internalIn = new PrintStream(tmpIIn);
-		TeeInputStream inViewer = new TeeInputStream(new PipedInputStream(tmpIIn), new PipedOutputStream(tmpEIn));
-		new Thread(new StreamWatcher(new InputStreamReader(inViewer), textArea, Color.GREEN)).start();
+		in = File.createTempFile("JConsole.in", null);
+		out = File.createTempFile("JConsole.out", null);
+		err = File.createTempFile("JConsole.err", null);
+		in.deleteOnExit();
+		out.deleteOnExit();
+		err.deleteOnExit();
+		inOutput = new PrintStream(in);
+		System.out.println(in.getCanonicalPath());
+		new Thread(new StreamWatcher(new BufferedInputStream(new FileInputStream(in)), textArea, Color.GREEN)).start();
+		new Thread(new StreamWatcher(new BufferedInputStream(new FileInputStream(out)), textArea, Color.BLACK)).start();
+		new Thread(new StreamWatcher(new BufferedInputStream(new FileInputStream(err)), textArea, Color.RED)).start();
 	}
 
 	public void initGUI() {
@@ -85,11 +79,11 @@ public class JConsole extends JPanel{
 	}
 
 	private class StreamWatcher implements Runnable {
-		private Reader stream;
+		private InputStream stream;
 		private JTextPane output;
 		private Color color;
 
-		private StreamWatcher(Reader stream, JTextPane output, Color color) {
+		private StreamWatcher(InputStream stream, JTextPane output, Color color) {
 			this.stream = stream;
 			this.output = output;
 			this.color = color;
@@ -97,14 +91,21 @@ public class JConsole extends JPanel{
 
 		@Override
 		public void run() {
-			char[] buff = new char[100];
+			byte[] buff = new byte[100];
 			int numChars;
 			try {
-				while((numChars = stream.read(buff)) != -1){
+				while(true){
+					if(stream.available() <= 0){
+						Thread.sleep(500);
+						continue;
+					}
+					numChars = stream.read(buff);
 					String text = new String(buff, 0, numChars);
 					appendToPane(output, text, color);
 				}
 			} catch (IOException e) {
+				throw new RuntimeException(e);
+			} catch (InterruptedException e) {
 				throw new RuntimeException(e);
 			}
 		}
@@ -126,20 +127,32 @@ public class JConsole extends JPanel{
 	}
 
 	public InputStream getIn(){
-		return externalIn;
+		try {
+			return new BufferedInputStream(new FileInputStream(in));
+		} catch (FileNotFoundException e) {
+			throw new RuntimeException(e);
+		}
 	}
 
 	public PrintStream getOut(){
-		return externalOut;
+		try {
+			return new PrintStream(out);
+		} catch (FileNotFoundException e) {
+			throw new RuntimeException(e);
+		}
 	}
 
 	public PrintStream getErr(){
-		return externalErr;
+		try {
+			return new PrintStream(err);
+		} catch (FileNotFoundException e) {
+			throw new RuntimeException(e);
+		}
 	}
 
 	protected void inputLine() {
 		String input = inputField.getText();
 		inputField.setText("");
-		internalIn.print(input);
+		inOutput.println(input);
 	}
 }
