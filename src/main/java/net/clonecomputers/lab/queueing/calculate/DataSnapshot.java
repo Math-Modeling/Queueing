@@ -15,6 +15,29 @@ public class DataSnapshot {
 		checkout = cashiersBusy;
 		event = shoppingEvent;
 	}
+	
+	public DataSnapshot(double deltaTime, int customersShopping, int queueLength, int cashiersBusy, DataSnapshot lastData) {
+		int lastShopping = lastData.getCustomersShopping();
+		int lastQueueLength = lastData.getQueueLength();
+		int lastCashiersBusy = lastData.getCashiersBusy();
+		if(customersShopping == lastShopping + 1 && queueLength == lastQueueLength && cashiersBusy == lastCashiersBusy) {
+			event = QueueingEvent.SUPERMARKET_ARRIVE;
+		} else if(customersShopping == lastShopping - 1 && queueLength == lastQueueLength + 1 && cashiersBusy == lastCashiersBusy) {
+			event = QueueingEvent.ENTER_QUEUE;
+		} else if(customersShopping == lastShopping - 1 && queueLength == 0 && cashiersBusy == lastCashiersBusy + 1) {
+			event = QueueingEvent.SKIP_QUEUE;
+		} else if(customersShopping == lastShopping && queueLength == lastQueueLength - 1 && cashiersBusy == lastCashiersBusy) {
+			event = QueueingEvent.ENTER_LEAVE_CHECKOUT;
+		} else if(customersShopping == lastShopping && queueLength == 0 && cashiersBusy == lastCashiersBusy - 1) {
+			event = QueueingEvent.ONLY_LEAVE_CHECKOUT;
+		} else {
+			event = QueueingEvent.OTHER;
+		}
+		dt = deltaTime;
+		shopping = customersShopping;
+		queue = queueLength;
+		checkout = cashiersBusy;
+	}
 
 	public double getTime() {
 		return dt;

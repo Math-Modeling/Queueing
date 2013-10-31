@@ -201,7 +201,7 @@ public class StatsMain extends JFrame {
 					continue;
 				}
 				try {
-					lastData = tempData[i++] = createNewDataSnapshot(Double.parseDouble(r.get("delta t")),
+					lastData = tempData[i++] = new DataSnapshot(Double.parseDouble(r.get("delta t")),
 							Integer.parseInt(r.get("shopping")),
 							Integer.parseInt(r.get("in line")),
 							Integer.parseInt(r.get("at checkout")),
@@ -216,27 +216,6 @@ public class StatsMain extends JFrame {
 		} finally {
 			parser.close();
 		}
-	}
-	
-	private DataSnapshot createNewDataSnapshot(double dt, int shopping, int inLine, int atCheckout, DataSnapshot lastData) {
-		QueueingEvent event;
-		int lastShopping = lastData.getCustomersShopping();
-		int lastInLine = lastData.getQueueLength();
-		int lastAtCheckout = lastData.getCashiersBusy();
-		if(shopping == lastShopping + 1 && inLine == lastInLine && atCheckout == lastAtCheckout) {
-			event = QueueingEvent.SUPERMARKET_ARRIVE;
-		} else if(shopping == lastShopping - 1 && inLine == lastInLine + 1 && atCheckout == lastAtCheckout) {
-			event = QueueingEvent.ENTER_QUEUE;
-		} else if(shopping == lastShopping - 1 && inLine == 0 && atCheckout == lastAtCheckout + 1) {
-			event = QueueingEvent.SKIP_QUEUE;
-		} else if(shopping == lastShopping && inLine == lastInLine - 1 && atCheckout == lastAtCheckout) {
-			event = QueueingEvent.ENTER_LEAVE_CHECKOUT;
-		} else if(shopping == lastShopping && inLine == 0 && atCheckout == lastAtCheckout - 1) {
-			event = QueueingEvent.ONLY_LEAVE_CHECKOUT;
-		} else {
-			event = QueueingEvent.OTHER;
-		}
-		return new DataSnapshot(dt, shopping, inLine, atCheckout, event);
 	}
 	
 	SimulationData getData() {
