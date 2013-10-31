@@ -178,6 +178,7 @@ public class StatsMain extends JFrame {
 		System.setIn(oldIn);
 		System.setOut(oldOut);
 		System.setErr(oldErr);
+		consoleWindow.dispose();
 		
 		loadCsvData(new BufferedReader(pipeOutput));
 	}
