@@ -68,14 +68,14 @@ public class DataSnapshot {
 		 * | L | -> | L - 1 |
 		 * \ C /    \   C   /
 		 */
-		ENTER_CHECKOUT,
+		ENTER_LEAVE_CHECKOUT,
 		
 		/**
 		 * / S \    /   S   \
 		 * | 0 | -> |   0   |
 		 * \ C /    \ C - 1 /
 		 */
-		LEAVE_CHECKOUT,
+		ONLY_LEAVE_CHECKOUT,
 		OTHER,
 	}
 	
