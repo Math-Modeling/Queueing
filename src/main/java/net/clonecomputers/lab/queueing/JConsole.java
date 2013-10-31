@@ -8,8 +8,6 @@ import java.lang.reflect.*;
 import javax.swing.*;
 import javax.swing.text.*;
 
-import org.apache.commons.io.input.*;
-
 @SuppressWarnings("serial")
 public class JConsole extends JPanel{
 	private JTextPane textArea;
@@ -133,13 +131,11 @@ public class JConsole extends JPanel{
 
 	private class StreamWatcher implements Runnable {
 		private InputStream stream;
-		private JTextPane output;
 		private Style style;
 		private StyledDocument document;
 
 		private StreamWatcher(InputStream stream, JTextPane output, Color color) {
 			this.stream = stream;
-			this.output = output;
 			style = output.addStyle(color.toString(), null);
 			StyleConstants.setForeground(style,color);
 			document = output.getStyledDocument();
