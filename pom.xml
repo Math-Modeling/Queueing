@@ -31,6 +31,11 @@
       <artifactId>reflections</artifactId>
       <version>0.9.9-RC1</version>
     </dependency>
+	<dependency>
+		<groupId>net.clonecomputers.lab</groupId>
+		<artifactId>Java-Utility-Library</artifactId>
+		<version>3.0.0</version>
+	</dependency>
   </dependencies>
   
   <repositories>
