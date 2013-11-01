@@ -43,6 +43,10 @@
   	  <id>thirdparty</id>
   	  <url>http://gavin.clonecomputers.net:8081/nexus/content/repositories/thirdparty/</url>
   	</repository>
+  	<repository>
+  	  <id>releases</id>
+  	  <url>http://gavin.clonecomputers.net:8081/nexus/content/repositories/releases/</url>
+  	</repository>
   </repositories>
   
   <organization>
