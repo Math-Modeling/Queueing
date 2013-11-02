@@ -76,9 +76,9 @@
             </goals>
             <configuration>
               <artifactSet>
-                <includes>
+                <excludes>
                   <exclude>junit:junit</exclude>
-                </includes>
+                </excludes>
               </artifactSet>
             </configuration>
           </execution>
