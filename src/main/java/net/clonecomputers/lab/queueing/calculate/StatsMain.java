@@ -145,7 +145,7 @@ public class StatsMain extends JFrame {
 		buttonPanel.add(saveData);
 		buttonPanel.add(openAnalyzer);
 		sidePanel.add(buttonPanel, BorderLayout.PAGE_START);
-		sidePanel.add(new JScrollPane(analyzersList), BorderLayout.CENTER);
+		sidePanel.add(new JScrollPane(analyzersList), BorderLayout.PAGE_END);
 		contentPane.add(sidePanel, BorderLayout.LINE_START);
 		setResizable(false);
 		pack();
