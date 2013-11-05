@@ -1,4 +1,4 @@
-package net.clonecomputers.lab.queueing.calculate.filter;
+package net.clonecomputers.lab.queueing.calculate;
 
 import java.util.*;
 

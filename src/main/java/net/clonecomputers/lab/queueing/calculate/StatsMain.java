@@ -15,7 +15,6 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
-import net.clonecomputers.lab.queueing.calculate.filter.*;
 import net.clonecomputers.lab.queueing.generate.Queueing;
 import net.clonecomputers.lab.util.*;
 
@@ -247,11 +246,13 @@ public class StatsMain {
 		});
 		filterPanel.setLayout(new BorderLayout());
 		JPanel buttonPanel = new JPanel(new BorderLayout());
+		JPanel dPad = new JPanel(new GridLayout(3, 3));
 		
-		JButton up = new JButton("/\\");
-		JButton down = new JButton("\\/");
-		JButton insert = new JButton(">");
-		JButton delete = new JButton("<");
+		JButton up = new JButton("↑");
+		JButton down = new JButton("↓");
+		JButton insert = new JButton("→");
+		JButton delete = new JButton("←");
+		JButton filter = new JButton("Filter!");
 		
 		buttonPanel.add(up, BorderLayout.NORTH);
 		buttonPanel.add(down, BorderLayout.SOUTH);
