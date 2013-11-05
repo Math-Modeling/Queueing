@@ -15,6 +15,7 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
+import net.clonecomputers.lab.queueing.calculate.filter.*;
 import net.clonecomputers.lab.queueing.generate.Queueing;
 import net.clonecomputers.lab.util.*;
 
@@ -22,23 +23,32 @@ import org.apache.commons.csv.*;
 import org.reflections.Reflections;
 
 @SuppressWarnings("serial")
-public class StatsMain extends JFrame {
+public class StatsMain {
 	
-	private JFrame analyzeWindow;
-	private JFrame filterWindow;
+	private JPanel analyzePanel;
+	private JPanel filterPanel;
+	private Container mainPanel;
+	
+	private JFrame mainWindow; // USE ONLY AS mainWindow.pack() AFTER COMPONENT CHANGE
 	
 	private ExecutorService exec = Executors.newCachedThreadPool();
 	
 	private final JFileChooser fileChooser = new JFileChooser();
 	
 	private SimulationData data = new SimulationData(new DataSnapshot[0], 0, 0, 0);
+	
 	private Set<AbstractAnalyzer> analyzers;
 	private JList analyzersList;
 	private AbstractAnalyzer showing = null;
+	
+	private Set<Filter> filters;
+	private JList filterList;
+	private JList activeFilterList;
 
 	public static void main(String[] args) {
 		final StatsMain app = new StatsMain();
 		app.loadAnalyzersFromDefaultPackage();
+		app.loadFiltersFromDefaultPackage();
 		SwingUtilities.invokeLater(new Runnable() {
 			
 			public void run() {
@@ -66,18 +76,38 @@ public class StatsMain extends JFrame {
 		}
 	}
 	
+	private void loadFiltersFromDefaultPackage() { // FIXME: doesn't load anything
+		Reflections filterPackage = new Reflections("net.clonecomputers.lab.queueing.calculate.filters");
+		Set<Class<? extends Filter>> filtersInPackage = filterPackage.getSubTypesOf(Filter.class);
+		filters = new HashSet<Filter>();
+		for(Class<? extends Filter> a : filtersInPackage) {
+			try {
+				Constructor<? extends Filter> constructor = a.getConstructor();
+				Filter newFilter = constructor.newInstance();
+				filters.add(newFilter);
+			} catch(NoSuchMethodException e) {
+				System.err.println(a.getSimpleName() + " needs a default constructor");
+			} catch(Exception e) {
+				System.err.println("Error initializing filter class " + a.getSimpleName());
+				e.printStackTrace();
+			}
+		}
+	}
+	
 	private void initGui() {
-		analyzeWindow = new JFrame("Analyze Data");
-		filterWindow = new JFrame("Filter Data");
+		mainWindow = new JFrame();
 		
-		Container contentPane = getContentPane();
-		Container analyzeContentPane = analyzeWindow.getContentPane();
-		Container filterContentPane = filterWindow.getContentPane();
+		analyzePanel = new JPanel();
+		filterPanel = new JPanel();
+		mainPanel = mainWindow.getContentPane();
+		
+		JPanel buttonPanel = new JPanel();
 		JPanel analyzeLeftPanel = new JPanel();
 		
-		contentPane.setLayout(new BoxLayout(contentPane, BoxLayout.PAGE_AXIS));
-		analyzeContentPane.setLayout(new BorderLayout());
-		filterContentPane.setLayout(new BorderLayout());
+		mainPanel.setLayout(new BorderLayout());
+		buttonPanel.setLayout(new BoxLayout(buttonPanel, BoxLayout.PAGE_AXIS));
+		analyzePanel.setLayout(new BorderLayout());
+		filterPanel.setLayout(new BorderLayout());
 		analyzeLeftPanel.setLayout(new BorderLayout());
 		
 		JButton generateData = new JButton("Generate Data");
@@ -85,6 +115,8 @@ public class StatsMain extends JFrame {
 		JButton saveData = new JButton("Save Data");
 		JButton analyzeData = new JButton("Analyze Data");
 		JButton filterData = new JButton("Filter Data");
+		
+		initFilterGUI();
 		
 		JButton openAnalyzer = new JButton("Open Analyzer");
 		
@@ -146,14 +178,20 @@ public class StatsMain extends JFrame {
 			
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
-				analyzeWindow.setVisible(true);
+				mainPanel.remove(filterPanel);
+				mainPanel.add(analyzePanel, BorderLayout.CENTER);
+				mainPanel.validate();
+				mainWindow.pack();
 			}
 		});
 		filterData.addActionListener(new ActionListener() {
 			
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				filterWindow.setVisible(true);
+				mainPanel.remove(analyzePanel);
+				mainPanel.add(filterPanel, BorderLayout.CENTER);
+				mainPanel.validate();
+				mainWindow.pack();
 			}
 		});
 		openAnalyzer.addActionListener(new ActionListener() {
@@ -168,38 +206,65 @@ public class StatsMain extends JFrame {
 			}
 		});
 		
-		contentPane.add(generateData);
-		contentPane.add(openData);
-		contentPane.add(saveData);
-		contentPane.add(analyzeData);
-		contentPane.add(filterData);
+		buttonPanel.add(generateData);
+		buttonPanel.add(openData);
+		buttonPanel.add(saveData);
+		buttonPanel.add(analyzeData);
+		buttonPanel.add(filterData);
 		
 		analyzeLeftPanel.add(new JScrollPane(analyzersList), BorderLayout.PAGE_END);
 		analyzeLeftPanel.add(openAnalyzer, BorderLayout.PAGE_START);
-		analyzeContentPane.add(analyzeLeftPanel,BorderLayout.LINE_START);
+		analyzePanel.add(analyzeLeftPanel,BorderLayout.LINE_START);
 		
-		filterContentPane.add(new JLabel("Filters!"));
+		mainPanel.add(buttonPanel,BorderLayout.LINE_START);
 		
-		setResizable(false);
-		pack();
-		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		setVisible(true);
+		buttonPanel.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 1, Color.BLACK));
 		
-		analyzeWindow.setResizable(false);
-		analyzeWindow.pack();
-		analyzeWindow.setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
-		analyzeWindow.setVisible(false);
-		analyzeWindow.setLocation(this.getX() + this.getWidth() + 5, this.getY());
-
-		filterWindow.setResizable(false);
-		filterWindow.pack();
-		filterWindow.setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
-		filterWindow.setVisible(false);
-		filterWindow.setLocation(this.getX(), this.getY() +
-				Math.max(this.getHeight(),
-						filterWindow.getWidth() <= this.getWidth()? 0: analyzeWindow.getHeight()) + 5);
+		mainWindow.setResizable(false);
+		mainWindow.pack();
+		mainWindow.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		mainWindow.setVisible(true);
 	}
 	
+	private void initFilterGUI() {
+		filterList = new JList(filters.toArray());
+		filterList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+		filterList.setCellRenderer(new DefaultListCellRenderer() {         // what is this about?  -Gavin
+			
+			public Component getListCellRendererComponent(JList list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
+				return super.getListCellRendererComponent(list, value.getClass().getSimpleName(), index, isSelected, cellHasFocus);
+			}
+			
+		});
+		activeFilterList = new JList();
+		activeFilterList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+		activeFilterList.setCellRenderer(new DefaultListCellRenderer() {         // what is this about?  -Gavin
+			
+			public Component getListCellRendererComponent(JList list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
+				return super.getListCellRendererComponent(list, value.getClass().getSimpleName(), index, isSelected, cellHasFocus);
+			}
+			
+		});
+		filterPanel.setLayout(new BorderLayout());
+		JPanel buttonPanel = new JPanel(new BorderLayout());
+		
+		JButton up = new JButton("/\\");
+		JButton down = new JButton("\\/");
+		JButton insert = new JButton(">");
+		JButton delete = new JButton("<");
+		
+		buttonPanel.add(up, BorderLayout.NORTH);
+		buttonPanel.add(down, BorderLayout.SOUTH);
+		buttonPanel.add(insert, BorderLayout.EAST);
+		buttonPanel.add(delete, BorderLayout.WEST);
+		
+		//TODO: add listeners to motion buttons so they do stuff
+		
+		filterPanel.add(new JScrollPane(filterList),BorderLayout.LINE_START);
+		filterPanel.add(new JScrollPane(activeFilterList),BorderLayout.LINE_END);
+		filterPanel.add(buttonPanel, BorderLayout.CENTER);
+	}
+
 	private void generateData() throws IOException, InterruptedException, InvocationTargetException{
 		File f = File.createTempFile("data", null);
 		f.deleteOnExit();
@@ -221,7 +286,6 @@ public class StatsMain extends JFrame {
 		consoleWindow.setResizable(false);
 		consoleWindow.setVisible(true);
 		consoleWindow.setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
-		this.repaint();
 		
 		Queueing q = new Queueing();
 		q.setup(pipeInput);
@@ -310,13 +374,13 @@ public class StatsMain extends JFrame {
 		//JFileChooser analyzerChooser = new JFileChooser();
 		//analyzerChooser.setFileFilter(new FileNameExtensionFilter("Allow .class or .jar files", "class", "jar"));
 		//analyzerChooser.showOpenDialog(this);
-		JOptionPane.showMessageDialog(this, "Sorry loading analyzers from file is not yet implemented",
+		JOptionPane.showMessageDialog(mainPanel, "Sorry loading analyzers from file is not yet implemented",
 				"Not Implemented", JOptionPane.ERROR_MESSAGE);
 	}
 	
 	private void saveData() {
 		fileChooser.setFileFilter(new FileNameExtensionFilter("*.csv", "csv"));
-		if(fileChooser.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
+		if(fileChooser.showSaveDialog(mainPanel) == JFileChooser.APPROVE_OPTION) {
 			try {
 				saveCsvData(fileChooser.getSelectedFile());
 			} catch (IOException e) {
@@ -327,21 +391,21 @@ public class StatsMain extends JFrame {
 	
 	private void openData() {
 		fileChooser.setFileFilter(new FileNameExtensionFilter("*.csv", "csv"));
-		if(fileChooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
+		if(fileChooser.showOpenDialog(mainPanel) == JFileChooser.APPROVE_OPTION) {
 			try {
 				loadCsvData(fileChooser.getSelectedFile());
 			} catch (FileNotFoundException e) {
-				JOptionPane.showMessageDialog(this, "Failed to find CSV file!", "Error!", JOptionPane.ERROR_MESSAGE);
+				JOptionPane.showMessageDialog(mainPanel, "Failed to find CSV file!", "Error!", JOptionPane.ERROR_MESSAGE);
 				e.printStackTrace();
 			} catch(IOException e) {
-				JOptionPane.showMessageDialog(this, "Error parsing CSV file!", "Error!", JOptionPane.ERROR_MESSAGE);
+				JOptionPane.showMessageDialog(mainPanel, "Error parsing CSV file!", "Error!", JOptionPane.ERROR_MESSAGE);
 			}
 		}
 	}
 	
 	private void setShowingAnalyzer(AbstractAnalyzer a) {
 		if(showing != null) {
-			analyzeWindow.getContentPane().remove(showing);
+			analyzePanel.remove(showing);
 		}
 		if(a != null) {
 			JPanel newPanel = new JPanel(new BorderLayout());
@@ -349,10 +413,11 @@ public class StatsMain extends JFrame {
 			spacerPanel.setPreferredSize(new Dimension(2, 2));
 			newPanel.add(spacerPanel,BorderLayout.LINE_START);
 			newPanel.add(a, BorderLayout.LINE_END);
-			analyzeWindow.getContentPane().add(newPanel,BorderLayout.LINE_END);
+			analyzePanel.add(newPanel,BorderLayout.LINE_END);
 		}
 		showing = a;
-		analyzeWindow.pack();
+		analyzePanel.validate();
+		mainWindow.pack();
 	}
 
 }
