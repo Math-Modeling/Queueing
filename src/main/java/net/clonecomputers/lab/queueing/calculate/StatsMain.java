@@ -12,16 +12,7 @@ import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import javax.swing.DefaultListCellRenderer;
-import javax.swing.JButton;
-import javax.swing.JFileChooser;
-import javax.swing.JFrame;
-import javax.swing.JList;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.ListSelectionModel;
-import javax.swing.SwingUtilities;
+import javax.swing.*;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.filechooser.FileNameExtensionFilter;
@@ -148,9 +139,11 @@ public class StatsMain extends JFrame {
 				);
 			}
 		});
-		buttonPanel.add(openAnalyzer, BorderLayout.PAGE_START);
-		buttonPanel.add(generateData, BorderLayout.CENTER);
-		buttonPanel.add(openData, BorderLayout.PAGE_END);
+		buttonPanel.setLayout(new BoxLayout(buttonPanel,BoxLayout.PAGE_AXIS));
+		buttonPanel.add(generateData);
+		buttonPanel.add(openData);
+		buttonPanel.add(saveData);
+		buttonPanel.add(openAnalyzer);
 		sidePanel.add(buttonPanel, BorderLayout.PAGE_START);
 		sidePanel.add(new JScrollPane(analyzersList), BorderLayout.CENTER);
 		contentPane.add(sidePanel, BorderLayout.LINE_START);
