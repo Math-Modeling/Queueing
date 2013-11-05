@@ -15,7 +15,7 @@ public class DataSnapshot {
 		shopping = customersShopping;
 		queue = queueLength;
 		checkout = cashiersBusy;
-		events = shoppingEvents;
+		events = Collections.unmodifiableList(shoppingEvents);
 	}
 	
 	public DataSnapshot(double deltaTime, int customersShopping, int queueLength, int cashiersBusy, QueueingEvent shoppingEvent) {
@@ -76,7 +76,7 @@ public class DataSnapshot {
 	 * @return the list of events
 	 */
 	public List<QueueingEvent> getEvents() {
-		return Collections.unmodifiableList(events);
+		return events;
 	}
 	
 	@Override
