@@ -1,8 +1,6 @@
 package net.clonecomputers.lab.queueing.calculate;
 
-import java.awt.BorderLayout;
-import java.awt.Component;
-import java.awt.Container;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.*;
@@ -25,6 +23,9 @@ import org.reflections.Reflections;
 
 @SuppressWarnings("serial")
 public class StatsMain extends JFrame {
+	
+	private JFrame analyzeWindow;
+	private JFrame filterWindow;
 	
 	private ExecutorService exec = Executors.newCachedThreadPool();
 	
@@ -66,17 +67,30 @@ public class StatsMain extends JFrame {
 	}
 	
 	private void initGui() {
+		analyzeWindow = new JFrame("Analyze Data");
+		filterWindow = new JFrame("Filter Data");
+		
 		Container contentPane = getContentPane();
-		contentPane.setLayout(new BorderLayout());
-		JPanel sidePanel = new JPanel(new BorderLayout());
-		JPanel buttonPanel = new JPanel(new BorderLayout());
+		Container analyzeContentPane = analyzeWindow.getContentPane();
+		Container filterContentPane = filterWindow.getContentPane();
+		JPanel analyzeLeftPanel = new JPanel();
+		
+		contentPane.setLayout(new BoxLayout(contentPane, BoxLayout.PAGE_AXIS));
+		analyzeContentPane.setLayout(new BorderLayout());
+		filterContentPane.setLayout(new BorderLayout());
+		analyzeLeftPanel.setLayout(new BorderLayout());
+		
 		JButton generateData = new JButton("Generate Data");
 		JButton openData = new JButton("Load Data");
 		JButton saveData = new JButton("Save Data");
+		JButton analyzeData = new JButton("Analyze Data");
+		JButton filterData = new JButton("Filter Data");
+		
 		JButton openAnalyzer = new JButton("Open Analyzer");
+		
 		analyzersList = new JList(analyzers.toArray());
 		analyzersList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-		analyzersList.setCellRenderer(new DefaultListCellRenderer() {
+		analyzersList.setCellRenderer(new DefaultListCellRenderer() {         // what is this about?  -Gavin
 			
 			public Component getListCellRendererComponent(JList list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
 				return super.getListCellRendererComponent(list, value.getClass().getSimpleName(), index, isSelected, cellHasFocus);
@@ -128,6 +142,20 @@ public class StatsMain extends JFrame {
 				});
 			}
 		});
+		analyzeData.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent arg0) {
+				analyzeWindow.setVisible(true);
+			}
+		});
+		filterData.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				filterWindow.setVisible(true);
+			}
+		});
 		openAnalyzer.addActionListener(new ActionListener() {
 			
 			public void actionPerformed(ActionEvent e) {
@@ -139,18 +167,37 @@ public class StatsMain extends JFrame {
 				);
 			}
 		});
-		buttonPanel.setLayout(new BoxLayout(buttonPanel,BoxLayout.PAGE_AXIS));
-		buttonPanel.add(generateData);
-		buttonPanel.add(openData);
-		buttonPanel.add(saveData);
-		buttonPanel.add(openAnalyzer);
-		sidePanel.add(buttonPanel, BorderLayout.PAGE_START);
-		sidePanel.add(new JScrollPane(analyzersList), BorderLayout.PAGE_END);
-		contentPane.add(sidePanel, BorderLayout.LINE_START);
+		
+		contentPane.add(generateData);
+		contentPane.add(openData);
+		contentPane.add(saveData);
+		contentPane.add(analyzeData);
+		contentPane.add(filterData);
+		
+		analyzeLeftPanel.add(new JScrollPane(analyzersList), BorderLayout.PAGE_END);
+		analyzeLeftPanel.add(openAnalyzer, BorderLayout.PAGE_START);
+		analyzeContentPane.add(analyzeLeftPanel,BorderLayout.LINE_START);
+		
+		filterContentPane.add(new JLabel("Filters!"));
+		
 		setResizable(false);
 		pack();
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setVisible(true);
+		
+		analyzeWindow.setResizable(false);
+		analyzeWindow.pack();
+		analyzeWindow.setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
+		analyzeWindow.setVisible(false);
+		analyzeWindow.setLocation(this.getX() + this.getWidth() + 5, this.getY());
+
+		filterWindow.setResizable(false);
+		filterWindow.pack();
+		filterWindow.setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
+		filterWindow.setVisible(false);
+		filterWindow.setLocation(this.getX(), this.getY() +
+				Math.max(this.getHeight(),
+						filterWindow.getWidth() <= this.getWidth()? 0: analyzeWindow.getHeight()) + 5);
 	}
 	
 	private void generateData() throws IOException, InterruptedException, InvocationTargetException{
@@ -294,13 +341,18 @@ public class StatsMain extends JFrame {
 	
 	private void setShowingAnalyzer(AbstractAnalyzer a) {
 		if(showing != null) {
-			getContentPane().remove(showing);
+			analyzeWindow.getContentPane().remove(showing);
 		}
 		if(a != null) {
-			getContentPane().add(a, BorderLayout.CENTER);
+			JPanel newPanel = new JPanel(new BorderLayout());
+			JPanel spacerPanel = new JPanel();
+			spacerPanel.setPreferredSize(new Dimension(2, 2));
+			newPanel.add(spacerPanel,BorderLayout.LINE_START);
+			newPanel.add(a, BorderLayout.LINE_END);
+			analyzeWindow.getContentPane().add(newPanel,BorderLayout.LINE_END);
 		}
 		showing = a;
-		pack();
+		analyzeWindow.pack();
 	}
 
 }
