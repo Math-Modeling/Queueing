@@ -10,7 +10,7 @@ public class SimulationData implements Iterable<DataSnapshot> {
 	private final double mu;
 	private final int numCashiers;
 
-	SimulationData(DataSnapshot[] simData, double lambda, double mu, int numberOfCashiers) {
+	public SimulationData(DataSnapshot[] simData, double lambda, double mu, int numberOfCashiers) {
 		data = simData;
 		this.lambda = lambda;
 		this.mu = mu;
