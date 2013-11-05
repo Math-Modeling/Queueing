@@ -1,19 +1,29 @@
 package net.clonecomputers.lab.queueing.calculate;
 
+import java.util.*;
+
 public class DataSnapshot {
 	
 	private final double dt;
 	private final int shopping;
 	private final int queue;
 	private final int checkout;
-	private final QueueingEvent event;
+	private final List<QueueingEvent> events;
+	
+	public DataSnapshot(double deltaTime, int customersShopping, int queueLength, int cashiersBusy, List<QueueingEvent> shoppingEvents) {
+		dt = deltaTime;
+		shopping = customersShopping;
+		queue = queueLength;
+		checkout = cashiersBusy;
+		events = shoppingEvents;
+	}
 	
 	public DataSnapshot(double deltaTime, int customersShopping, int queueLength, int cashiersBusy, QueueingEvent shoppingEvent) {
 		dt = deltaTime;
 		shopping = customersShopping;
 		queue = queueLength;
 		checkout = cashiersBusy;
-		event = shoppingEvent;
+		events = Collections.singletonList(shoppingEvent);
 	}
 	
 	public DataSnapshot(double deltaTime, int customersShopping, int queueLength, int cashiersBusy, DataSnapshot lastData) {
@@ -21,17 +31,17 @@ public class DataSnapshot {
 		int lastQueueLength = lastData==null? 0: lastData.getQueueLength();
 		int lastCashiersBusy = lastData==null? 0: lastData.getCashiersBusy();
 		if(customersShopping == lastShopping + 1 && queueLength == lastQueueLength && cashiersBusy == lastCashiersBusy) {
-			event = QueueingEvent.SUPERMARKET_ARRIVE;
+			events = Collections.singletonList(QueueingEvent.SUPERMARKET_ARRIVE);
 		} else if(customersShopping == lastShopping - 1 && queueLength == lastQueueLength + 1 && cashiersBusy == lastCashiersBusy) {
-			event = QueueingEvent.ENTER_QUEUE;
+			events = Collections.singletonList(QueueingEvent.ENTER_QUEUE);
 		} else if(customersShopping == lastShopping - 1 && queueLength == 0 && cashiersBusy == lastCashiersBusy + 1) {
-			event = QueueingEvent.SKIP_QUEUE;
+			events = Collections.singletonList(QueueingEvent.SKIP_QUEUE);
 		} else if(customersShopping == lastShopping && queueLength == lastQueueLength - 1 && cashiersBusy == lastCashiersBusy) {
-			event = QueueingEvent.ENTER_LEAVE_CHECKOUT;
+			events = Collections.singletonList(QueueingEvent.ENTER_LEAVE_CHECKOUT);
 		} else if(customersShopping == lastShopping && queueLength == 0 && cashiersBusy == lastCashiersBusy - 1) {
-			event = QueueingEvent.ONLY_LEAVE_CHECKOUT;
+			events = Collections.singletonList(QueueingEvent.ONLY_LEAVE_CHECKOUT);
 		} else {
-			event = QueueingEvent.OTHER;
+			events = Collections.singletonList(QueueingEvent.OTHER);
 		}
 		dt = deltaTime;
 		shopping = customersShopping;
@@ -55,8 +65,18 @@ public class DataSnapshot {
 		return checkout;
 	}
 	
+	/**
+	 * @return the event if there is only one event, otherwise QueueingEvent.OTHER
+	 */
 	public QueueingEvent getEvent() {
-		return event;
+		return events.size() == 1? events.get(0): QueueingEvent.OTHER;
+	}
+	
+	/**
+	 * @return the list of events
+	 */
+	public List<QueueingEvent> getEvents() {
+		return Collections.unmodifiableList(events);
 	}
 	
 	@Override
