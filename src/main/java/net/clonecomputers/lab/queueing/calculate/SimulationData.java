@@ -34,6 +34,10 @@ public class SimulationData implements Iterable<DataSnapshot> {
 		return numCashiers;
 	}
 	
+	public int size() {
+		return data.length;
+	}
+	
 	public Iterator<DataSnapshot> iterator() {
 		return new DataItr();
 	}

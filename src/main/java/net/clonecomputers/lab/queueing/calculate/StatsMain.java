@@ -27,12 +27,9 @@ import javax.swing.event.ListSelectionListener;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
 import net.clonecomputers.lab.queueing.generate.Queueing;
-
 import net.clonecomputers.lab.util.*;
 
-import org.apache.commons.csv.CSVFormat;
-import org.apache.commons.csv.CSVParser;
-import org.apache.commons.csv.CSVRecord;
+import org.apache.commons.csv.*;
 import org.reflections.Reflections;
 
 @SuppressWarnings("serial")
@@ -82,9 +79,10 @@ public class StatsMain extends JFrame {
 		contentPane.setLayout(new BorderLayout());
 		JPanel sidePanel = new JPanel(new BorderLayout());
 		JPanel buttonPanel = new JPanel(new BorderLayout());
-		JButton openAnalyzer = new JButton("Open Analyzer");
 		JButton generateData = new JButton("Generate Data");
-		JButton openData = new JButton("Open Data");
+		JButton openData = new JButton("Load Data");
+		JButton saveData = new JButton("Save Data");
+		JButton openAnalyzer = new JButton("Open Analyzer");
 		analyzersList = new JList(analyzers.toArray());
 		analyzersList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		analyzersList.setCellRenderer(new DefaultListCellRenderer() {
@@ -98,17 +96,6 @@ public class StatsMain extends JFrame {
 			
 			public void valueChanged(ListSelectionEvent e) {
 				setShowingAnalyzer((AbstractAnalyzer) analyzersList.getSelectedValue());
-			}
-		});
-		openAnalyzer.addActionListener(new ActionListener() {
-			
-			public void actionPerformed(ActionEvent e) {
-				exec.execute(new Runnable(){
-					@Override public void run() {
-						openAnalyzer();
-					}
-				}
-				);
 			}
 		});
 		generateData.addActionListener(new ActionListener() {
@@ -133,7 +120,32 @@ public class StatsMain extends JFrame {
 		openData.addActionListener(new ActionListener() {
 			
 			public void actionPerformed(ActionEvent e) {
-				openData();
+				exec.execute(new Runnable(){
+					@Override public void run() {
+						openData();
+					}
+				});
+			}
+		});
+		saveData.addActionListener(new ActionListener() {
+			
+			public void actionPerformed(ActionEvent e) {
+				exec.execute(new Runnable(){
+					@Override public void run() {
+						saveData();
+					}
+				});
+			}
+		});
+		openAnalyzer.addActionListener(new ActionListener() {
+			
+			public void actionPerformed(ActionEvent e) {
+				exec.execute(new Runnable(){
+					@Override public void run() {
+						openAnalyzer();
+					}
+				}
+				);
 			}
 		});
 		buttonPanel.add(openAnalyzer, BorderLayout.PAGE_START);
@@ -181,6 +193,17 @@ public class StatsMain extends JFrame {
 		consoleWindow.dispose();
 		
 		loadCsvData(new BufferedReader(pipeOutput));
+	}
+	
+	private void saveCsvData(File csvFile) throws IOException {
+		CSVPrinter csv = new CSVPrinter(new BufferedWriter(new FileWriter(csvFile)), CSVFormat.EXCEL);
+		csv.printRecord("delta t","shopping","in line","at checkout","lambda","mu","number of cashiers","how long to run");
+		csv.printRecord(null,null,null,null,data.getLambda(),data.getMu(), data.getNumberOfCashiers(),data.size());
+		for(DataSnapshot s: data){
+			csv.printRecord(s.getTime(),s.getCustomersShopping(),s.getQueueLength(),s.getCashiersBusy());
+		}
+		csv.flush();
+		csv.close();
 	}
 	
 	private void loadCsvData(File csv) throws IOException {
@@ -249,6 +272,17 @@ public class StatsMain extends JFrame {
 		//analyzerChooser.showOpenDialog(this);
 		JOptionPane.showMessageDialog(this, "Sorry loading analyzers from file is not yet implemented",
 				"Not Implemented", JOptionPane.ERROR_MESSAGE);
+	}
+	
+	private void saveData() {
+		fileChooser.setFileFilter(new FileNameExtensionFilter("*.csv", "csv"));
+		if(fileChooser.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
+			try {
+				saveCsvData(fileChooser.getSelectedFile());
+			} catch (IOException e) {
+				throw new RuntimeException(e);
+			}
+		}
 	}
 	
 	private void openData() {
