@@ -92,6 +92,7 @@ public class Queueing {
 	}
 
 	public void run() throws IOException {
+		System.out.println("Generating data");
 		for(long i = 0; i < maxIterations + 1; i++){ // now discards last data, so must do one more iteration
 			// in order to get the desired number of iterations
 			double intervalLength = howLongCurrentStateWillLast();
