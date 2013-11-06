@@ -50,11 +50,11 @@ public class Queueing {
 		System.out.println("Should I add extra time for queue length? (Y/n)");
 		extraTime = isTrue(in.readLine().trim(),true);
 		for(int i = 0; i < cashiers.length; i++) cashiers[i] = new Cashier();
-		timeToNextCustomer = 0;
 		customers = new HashSet<Customer>();
 		customersInQueue = new LinkedList<Customer>();
 		mu = .25;
 		lambda = 5;
+		timeToNextCustomer = randomCustomerInterval();
 		csv = new CSVExport(this);
 		csv.startCSV(csvOutput);
 	}

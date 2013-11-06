@@ -308,7 +308,7 @@ public class StatsMain {
 		loadCsvData(new BufferedReader(new FileReader(csv)));
 	}
 	
-	private void loadCsvData(Reader csvInput) throws IOException { //FIXME: doesn't properly load time for first snapshot
+	private void loadCsvData(Reader csvInput) throws IOException {
 		CSVParser parser = new CSVParser(csvInput, CSVFormat.EXCEL
 				.withSkipHeaderRecord(true).withHeader().withIgnoreEmptyLines(true));
 		DataSnapshot[] tempData = null;
