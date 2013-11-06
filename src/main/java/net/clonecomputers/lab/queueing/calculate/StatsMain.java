@@ -66,7 +66,6 @@ public class StatsMain {
         
 		HashSet<Class<? extends T>> allImpl = new HashSet<Class<? extends T>>();
 		Set<Class<? extends T>> allClasses = ref.getSubTypesOf(superclass);
-		System.out.println(allClasses);
 		for(Class<? extends T> c: allClasses){
 			if(superclass.isAssignableFrom(c) &&
 					!c.isInterface() &&
@@ -141,7 +140,7 @@ public class StatsMain {
 		
 		analyzersList = new JList(analyzers.toArray());
 		analyzersList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-		analyzersList.setCellRenderer(new DefaultListCellRenderer() {         // what is this about?  -Gavin
+		analyzersList.setCellRenderer(new DefaultListCellRenderer() {
 			
 			public Component getListCellRendererComponent(JList list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
 				return super.getListCellRendererComponent(list, value.getClass().getSimpleName(), index, isSelected, cellHasFocus);
@@ -285,12 +284,15 @@ public class StatsMain {
 		q.setup(pipeInput);
 		q.run();
 		
+		System.out.println("Importing CSV");
+		
+		loadCsvData(new BufferedReader(pipeOutput));
+		
 		System.setIn(oldIn);
 		System.setOut(oldOut);
 		System.setErr(oldErr);
+
 		consoleWindow.dispose();
-		
-		loadCsvData(new BufferedReader(pipeOutput));
 	}
 	
 	private void saveCsvData(File csvFile) throws IOException {
