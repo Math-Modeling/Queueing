@@ -224,9 +224,13 @@ public class StatsMain {
 		analyzeData.addActionListener(new ActionListener() {
 			
 			@Override
-			public void actionPerformed(ActionEvent arg0) {
+			public void actionPerformed(ActionEvent e) {
+				Component[] comps = mainPanel.getComponents();
+				boolean b = false;
+				for(Component c: comps) if(c.equals(analyzePanel)) b = true;
+				mainPanel.remove(analyzePanel);
 				mainPanel.remove(filterPanel);
-				mainPanel.add(analyzePanel, BorderLayout.CENTER);
+				if(!b) mainPanel.add(analyzePanel, BorderLayout.CENTER);
 				mainPanel.validate();
 				mainWindow.pack();
 			}
@@ -235,8 +239,12 @@ public class StatsMain {
 			
 			@Override
 			public void actionPerformed(ActionEvent e) {
+				Component[] comps = mainPanel.getComponents();
+				boolean b = false;
+				for(Component c: comps) if(c.equals(filterPanel)) b = true;
 				mainPanel.remove(analyzePanel);
-				mainPanel.add(filterPanel, BorderLayout.CENTER);
+				mainPanel.remove(filterPanel);
+				if(!b) mainPanel.add(filterPanel, BorderLayout.CENTER);
 				mainPanel.validate();
 				mainWindow.pack();
 			}
