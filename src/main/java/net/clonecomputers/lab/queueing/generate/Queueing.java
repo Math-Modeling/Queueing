@@ -81,7 +81,7 @@ public class Queueing {
 		csv.startCSV(csvOutput);
 	}
 	
-	private boolean isTrue(String s, boolean defaultValue) {
+	private static boolean isTrue(String s, boolean defaultValue) {
 		if(defaultValue == false){
 			return s.equalsIgnoreCase("y") || s.equalsIgnoreCase("yes") ||
 					s.equalsIgnoreCase("t") || s.equalsIgnoreCase("true");

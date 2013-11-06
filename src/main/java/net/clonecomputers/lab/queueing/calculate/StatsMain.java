@@ -17,7 +17,6 @@ import net.clonecomputers.lab.queueing.calculate.filters.*;
 import net.clonecomputers.lab.queueing.generate.*;
 import net.clonecomputers.lab.util.*;
 
-import org.apache.commons.csv.*;
 import org.reflections.*;
 import org.reflections.scanners.*;
 import org.reflections.util.*;
@@ -55,7 +54,7 @@ public class StatsMain {
 		});
 	}
 	
-	private <T> HashSet<Class<? extends T>> findAllImplementations(String p, Class<T> superclass){
+	private static <T> HashSet<Class<? extends T>> findAllImplementations(String p, Class<T> superclass){
 		List<ClassLoader> classLoadersList = new LinkedList<ClassLoader>();
         classLoadersList.add(ClasspathHelper.contextClassLoader());
         classLoadersList.add(ClasspathHelper.staticClassLoader());
@@ -295,17 +294,6 @@ public class StatsMain {
 		consoleWindow.dispose();
 	}
 	
-	private void saveCsvData(File csvFile) throws IOException {
-		CSVPrinter csv = new CSVPrinter(new BufferedWriter(new FileWriter(csvFile)), CSVFormat.EXCEL);
-		csv.printRecord("delta t","shopping","in line","at checkout","lambda","mu","number of cashiers","how long to run");
-		csv.printRecord(null,null,null,null,data.getLambda(),data.getMu(), data.getNumberOfCashiers(),data.length());
-		for(DataSnapshot s: data){
-			csv.printRecord(s.getTime(),s.getCustomersShopping(),s.getQueueLength(),s.getCashiersBusy());
-		}
-		csv.flush();
-		csv.close();
-	}
-	
 	public SimulationData getData() {
 		return data;
 	}
@@ -322,7 +310,7 @@ public class StatsMain {
 		fileChooser.setFileFilter(new FileNameExtensionFilter("*.csv", "csv"));
 		if(fileChooser.showSaveDialog(mainPanel) == JFileChooser.APPROVE_OPTION) {
 			try {
-				saveCsvData(fileChooser.getSelectedFile());
+				data.saveData(fileChooser.getSelectedFile());
 			} catch (IOException e) {
 				throw new RuntimeException(e);
 			}
@@ -333,7 +321,7 @@ public class StatsMain {
 		fileChooser.setFileFilter(new FileNameExtensionFilter("*.csv", "csv"));
 		if(fileChooser.showOpenDialog(mainPanel) == JFileChooser.APPROVE_OPTION) {
 			try {
-				data = new ArrayBackedSimulationData(fileChooser.getSelectedFile());
+				data = new FileBackedSimulationData(fileChooser.getSelectedFile());
 			} catch (FileNotFoundException e) {
 				JOptionPane.showMessageDialog(mainPanel, "Failed to find CSV file!", "Error!", JOptionPane.ERROR_MESSAGE);
 				e.printStackTrace();

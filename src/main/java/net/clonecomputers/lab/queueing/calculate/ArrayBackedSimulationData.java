@@ -79,10 +79,10 @@ public class ArrayBackedSimulationData implements SimulationData {
 		}
 	}
 	
-	public DataSnapshot get(int index) {
+	/*public DataSnapshot get(int index) {
 		if(index >= data.length) throw new ArrayIndexOutOfBoundsException(index);
 		return data[index];
-	}
+	}*/
 	
 	public double getLambda() {
 		return lambda;
@@ -102,6 +102,17 @@ public class ArrayBackedSimulationData implements SimulationData {
 	
 	public Iterator<DataSnapshot> iterator() {
 		return new DataItr();
+	}
+	
+	public void saveData(File f) throws IOException {
+		CSVPrinter csv = new CSVPrinter(new BufferedWriter(new FileWriter(f)), CSVFormat.EXCEL);
+		csv.printRecord("delta t","shopping","in line","at checkout","lambda","mu","number of cashiers","how long to run");
+		csv.printRecord(null,null,null,null,getLambda(),getMu(), getNumberOfCashiers(),length());
+		for(DataSnapshot s: data){
+			csv.printRecord(s.getTime(),s.getCustomersShopping(),s.getQueueLength(),s.getCashiersBusy());
+		}
+		csv.flush();
+		csv.close();
 	}
 	
 	private class DataItr implements Iterator<DataSnapshot> {
