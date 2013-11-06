@@ -5,6 +5,7 @@ import java.awt.event.*;
 import java.io.*;
 import java.lang.reflect.*;
 import java.util.*;
+import java.util.List;
 import java.util.concurrent.*;
 
 import javax.swing.*;
@@ -19,6 +20,7 @@ import net.clonecomputers.lab.util.*;
 import org.apache.commons.csv.*;
 import org.reflections.*;
 import org.reflections.scanners.*;
+import org.reflections.util.*;
 
 @SuppressWarnings("serial")
 public class StatsMain {
@@ -54,15 +56,23 @@ public class StatsMain {
 	}
 	
 	private <T> HashSet<Class<? extends T>> findAllImplementations(String p, Class<T> superclass){
-		Reflections ref = new Reflections(p,new SubTypesScanner(false));
+		List<ClassLoader> classLoadersList = new LinkedList<ClassLoader>();
+        classLoadersList.add(ClasspathHelper.contextClassLoader());
+        classLoadersList.add(ClasspathHelper.staticClassLoader());
+                       
+        Reflections ref = new Reflections(new ConfigurationBuilder()
+            .setScanners(new SubTypesScanner(false /* don't exclude Object.class */), new ResourcesScanner())
+            .setUrls(ClasspathHelper.forClassLoader(classLoadersList.toArray(new ClassLoader[0]))));
+        
 		HashSet<Class<? extends T>> allImpl = new HashSet<Class<? extends T>>();
-		Set<Class<?>> allClasses = ref.getSubTypesOf(Object.class);
-		for(Class<?> c: allClasses){
+		Set<Class<? extends T>> allClasses = ref.getSubTypesOf(superclass);
+		System.out.println(allClasses);
+		for(Class<? extends T> c: allClasses){
 			if(superclass.isAssignableFrom(c) &&
 					!c.isInterface() &&
 					!c.isAnonymousClass() &&
 					!Modifier.isAbstract(c.getModifiers())){
-				allImpl.add((Class<? extends T>)c);
+				allImpl.add(c);
 			}
 		}
 		return allImpl;
@@ -86,7 +96,7 @@ public class StatsMain {
 		}
 	}
 	
-	private void loadFiltersFromDefaultPackage() { // FIXME: doesn't load anything
+	private void loadFiltersFromDefaultPackage() {
 		Set<Class<? extends Filter>> filtersInPackage = findAllImplementations("net.clonecomputers.lab.queueing.calculate.filters", Filter.class);
 		filters = new HashSet<Filter>();
 		for(Class<? extends Filter> a : filtersInPackage) {
