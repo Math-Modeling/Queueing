@@ -35,7 +35,7 @@ public class StatsMain {
 	
 	private final JFileChooser fileChooser = new JFileChooser();
 	
-	private SimulationData data = new SimulationData(new DataSnapshot[0], 0, 0, 0);
+	private SimulationData data = new ArrayBackedSimulationData(new DataSnapshot[0], 0, 0, 0);
 	
 	private Set<AbstractAnalyzer> analyzers;
 	private JList analyzersList;
@@ -286,7 +286,7 @@ public class StatsMain {
 		
 		System.out.println("Importing CSV");
 		
-		loadCsvData(new BufferedReader(pipeOutput));
+		data = new ArrayBackedSimulationData(new BufferedReader(pipeOutput));
 		
 		System.setIn(oldIn);
 		System.setOut(oldOut);
@@ -298,68 +298,12 @@ public class StatsMain {
 	private void saveCsvData(File csvFile) throws IOException {
 		CSVPrinter csv = new CSVPrinter(new BufferedWriter(new FileWriter(csvFile)), CSVFormat.EXCEL);
 		csv.printRecord("delta t","shopping","in line","at checkout","lambda","mu","number of cashiers","how long to run");
-		csv.printRecord(null,null,null,null,data.getLambda(),data.getMu(), data.getNumberOfCashiers(),data.size());
+		csv.printRecord(null,null,null,null,data.getLambda(),data.getMu(), data.getNumberOfCashiers(),data.length());
 		for(DataSnapshot s: data){
 			csv.printRecord(s.getTime(),s.getCustomersShopping(),s.getQueueLength(),s.getCashiersBusy());
 		}
 		csv.flush();
 		csv.close();
-	}
-	
-	private void loadCsvData(File csv) throws IOException {
-		loadCsvData(new BufferedReader(new FileReader(csv)));
-	}
-	
-	private void loadCsvData(Reader csvInput) throws IOException {
-		CSVParser parser = new CSVParser(csvInput, CSVFormat.EXCEL
-				.withSkipHeaderRecord(true).withHeader().withIgnoreEmptyLines(true));
-		DataSnapshot[] tempData = null;
-		double lambda, mu;
-		int numCashiers = 0;
-		lambda = mu = Double.NaN;
-		DataSnapshot lastData = null;
-		int i = 0;
-		try {
-			for(CSVRecord r : parser) {
-				if(tempData == null) {
-					if(r.isSet("how long to run") && r.isSet("lambda") && r.isSet("mu") && r.isSet("number of cashiers")) {
-						System.out.println("Found simulation wide data line");
-						int length = 0;
-						try {
-							length = Integer.parseInt(r.get("how long to run"));
-							lambda = Double.parseDouble(r.get("lambda"));
-							mu = Double.parseDouble(r.get("mu"));
-							numCashiers = Integer.parseInt(r.get("number of cashiers"));
-						} catch(NumberFormatException e) {}
-						if(length < 1) {
-							throw new IOException("error parsing how long to run (must be a positve int)");
-						} else if(Double.isNaN(lambda)) {
-							throw new IOException("error parsing lambda (must be a double)");
-						} else if(Double.isNaN(mu)) {
-							throw new IOException("error parsing mu (must be a double)");
-						} else if(numCashiers < 1) {
-							throw new IOException("error parsing number of cashiers (must be a positve int)");
-						}
-						tempData = new DataSnapshot[length];
-					}
-					continue;
-				}
-				try {
-					lastData = tempData[i++] = new DataSnapshot(Double.parseDouble(r.get("delta t")),
-							Integer.parseInt(r.get("shopping")),
-							Integer.parseInt(r.get("in line")),
-							Integer.parseInt(r.get("at checkout")),
-							lastData);
-				} catch(NumberFormatException e) {
-					System.err.println("NAN on line " + parser.getCurrentLineNumber() + " of csv file " + csvInput);
-					e.printStackTrace();
-				}
-			}
-			data = new SimulationData(tempData, lambda, mu, numCashiers);
-			System.out.println("Done reading CSV");
-		} finally {
-			parser.close();
-		}
 	}
 	
 	public SimulationData getData() {
@@ -389,7 +333,7 @@ public class StatsMain {
 		fileChooser.setFileFilter(new FileNameExtensionFilter("*.csv", "csv"));
 		if(fileChooser.showOpenDialog(mainPanel) == JFileChooser.APPROVE_OPTION) {
 			try {
-				loadCsvData(fileChooser.getSelectedFile());
+				data = new ArrayBackedSimulationData(fileChooser.getSelectedFile());
 			} catch (FileNotFoundException e) {
 				JOptionPane.showMessageDialog(mainPanel, "Failed to find CSV file!", "Error!", JOptionPane.ERROR_MESSAGE);
 				e.printStackTrace();
