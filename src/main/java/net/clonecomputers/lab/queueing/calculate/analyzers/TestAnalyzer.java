@@ -7,8 +7,6 @@ import javax.swing.BorderFactory;
 import javax.swing.JLabel;
 import javax.swing.SwingUtilities;
 
-import net.clonecomputers.lab.queueing.calculate.AbstractAnalyzer;
-
 public class TestAnalyzer extends AbstractAnalyzer {
 
 	public TestAnalyzer() {

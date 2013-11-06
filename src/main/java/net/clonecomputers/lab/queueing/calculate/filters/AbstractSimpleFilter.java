@@ -1,8 +1,9 @@
-package net.clonecomputers.lab.queueing.calculate;
+package net.clonecomputers.lab.queueing.calculate.filters;
 
 import java.util.*;
 
 import net.clonecomputers.lab.queueing.calculate.*;
+import net.clonecomputers.lab.queueing.calculate.DataSnapshot.*;
 
 public abstract class AbstractSimpleFilter extends AbstractFilter {
 	public abstract boolean acceptEvent(DataSnapshot e);

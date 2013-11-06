@@ -31,11 +31,11 @@ public class Queueing {
 		System.out.println("Should I add extra time for queue length? (Y/n)");
 		extraTime = isTrue(in.readLine().trim(),true);
 		for(int i = 0; i < cashiers.length; i++) cashiers[i] = new Cashier();
-		timeToNextCustomer = 0;
 		customers = new HashSet<Customer>();
 		customersInQueue = new LinkedList<Customer>();
 		mu = .25;
 		lambda = 5;
+		timeToNextCustomer = randomCustomerInterval();
 		csv = new CSVExport(this);
 		System.out.println("Input filepath");
 		String filepath = in.readLine().trim();
@@ -93,12 +93,12 @@ public class Queueing {
 
 	public void run() throws IOException {
 		System.out.println("Generating data");
-		for(long i = 0; i < maxIterations + 1; i++){ // now discards last data, so must do one more iteration
+		for(long i = 0; i < maxIterations; i++){ // now discards last data, so must do one more iteration
 			// in order to get the desired number of iterations
 			double intervalLength = howLongCurrentStateWillLast();
+			csv.record(howLongCurrentStateWillLast());
 			updateTime(intervalLength);
 			updateState();
-			csv.record(intervalLength);
 		}
 		System.out.println("Done");
 	}

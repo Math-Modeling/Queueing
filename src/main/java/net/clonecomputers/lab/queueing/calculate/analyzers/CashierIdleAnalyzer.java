@@ -11,7 +11,6 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 
-import net.clonecomputers.lab.queueing.calculate.AbstractAnalyzer;
 import net.clonecomputers.lab.queueing.calculate.DataSnapshot;
 
 

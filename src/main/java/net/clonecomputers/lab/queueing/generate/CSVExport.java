@@ -29,9 +29,6 @@ public class CSVExport {
 	}
 	
 	public void record(double timeInterval) throws IOException{
-		if(partial != null){
-			csv.printRecord(timeInterval, partial[0], partial[1], partial[2]);
-		}
 		int shopping = 0, inLine = 0, atCheckout = 0;
 		for(Customer c: q.customers){
 			if(c.inSupermarket) shopping++;
@@ -41,8 +38,6 @@ public class CSVExport {
 		if(shopping + inLine + atCheckout != q.customers.size()) csv.printComment("customer numbers don't add up");
 		if(inLine != q.customersInQueue.size()) csv.printComment("wrong number of customers in queue");
 		if(atCheckout > q.cashiers.length) csv.printComment("more people checking out than cashiers");
-		partial = new int[]{shopping, inLine, atCheckout};
+		csv.printRecord(timeInterval,shopping,inLine,atCheckout);
 	}
-	
-	int[] partial;
 }

@@ -1,4 +1,4 @@
-package net.clonecomputers.lab.queueing.calculate;
+package net.clonecomputers.lab.queueing.calculate.analyzers;
 
 import java.awt.Component;
 import java.io.BufferedWriter;
@@ -9,6 +9,10 @@ import java.util.List;
 
 import javax.swing.JFileChooser;
 import javax.swing.JPanel;
+
+import net.clonecomputers.lab.queueing.calculate.InputField;
+import net.clonecomputers.lab.queueing.calculate.SimulationData;
+import net.clonecomputers.lab.queueing.calculate.StatsMain;
 
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
@@ -22,7 +26,7 @@ public abstract class AbstractAnalyzer extends JPanel {
 	
 	public AbstractAnalyzer() {}
 	
-	void setMain(StatsMain main) {
+	public void setMain(StatsMain main) {
 		this.main = main;
 	}
 	

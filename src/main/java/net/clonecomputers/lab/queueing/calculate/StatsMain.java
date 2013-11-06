@@ -1,25 +1,60 @@
 package net.clonecomputers.lab.queueing.calculate;
 
-import java.awt.*;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Container;
+import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.*;
-import java.lang.reflect.*;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.PrintStream;
+import java.io.Reader;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Modifier;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import javax.swing.*;
+import javax.swing.AbstractListModel;
+import javax.swing.BorderFactory;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.DefaultListCellRenderer;
+import javax.swing.JButton;
+import javax.swing.JFileChooser;
+import javax.swing.JFrame;
+import javax.swing.JList;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.ListSelectionModel;
+import javax.swing.SwingUtilities;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
+import net.clonecomputers.lab.queueing.calculate.analyzers.AbstractAnalyzer;
+import net.clonecomputers.lab.queueing.calculate.filters.Filter;
 import net.clonecomputers.lab.queueing.generate.Queueing;
-import net.clonecomputers.lab.util.*;
+import net.clonecomputers.lab.util.JConsole;
 
-import org.apache.commons.csv.*;
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVParser;
+import org.apache.commons.csv.CSVPrinter;
+import org.apache.commons.csv.CSVRecord;
 import org.reflections.Reflections;
+import org.reflections.scanners.SubTypesScanner;
 
 @SuppressWarnings("serial")
 public class StatsMain {
@@ -42,7 +77,7 @@ public class StatsMain {
 	
 	private Set<Filter> filters;
 	private JList filterList;
-	private JList activeFilterList;
+	private java.util.List<Filter> activeFilters = new ArrayList<Filter>();
 
 	public static void main(String[] args) {
 		final StatsMain app = new StatsMain();
@@ -56,9 +91,23 @@ public class StatsMain {
 		});
 	}
 	
+	private <T> HashSet<Class<? extends T>> findAllImplementations(String p, Class<T> superclass){
+		Reflections ref = new Reflections(p,new SubTypesScanner(false));
+		HashSet<Class<? extends T>> allImpl = new HashSet<Class<? extends T>>();
+		Set<Class<?>> allClasses = ref.getSubTypesOf(Object.class);
+		for(Class<?> c: allClasses){
+			if(superclass.isAssignableFrom(c) &&
+					!c.isInterface() &&
+					!c.isAnonymousClass() &&
+					!Modifier.isAbstract(c.getModifiers())){
+				allImpl.add((Class<? extends T>)c);
+			}
+		}
+		return allImpl;
+	}
+	
 	private void loadAnalyzersFromDefaultPackage() {
-		Reflections analyzerPackage = new Reflections("net.clonecomputers.lab.queueing.calculate.analyzers");
-		Set<Class<? extends AbstractAnalyzer>> analyzersInPackage = analyzerPackage.getSubTypesOf(AbstractAnalyzer.class);
+		Set<Class<? extends AbstractAnalyzer>> analyzersInPackage = findAllImplementations("net.clonecomputers.lab.queueing.calculate.analyzers", AbstractAnalyzer.class);
 		analyzers = new HashSet<AbstractAnalyzer>();
 		for(Class<? extends AbstractAnalyzer> a : analyzersInPackage) {
 			try {
@@ -76,8 +125,7 @@ public class StatsMain {
 	}
 	
 	private void loadFiltersFromDefaultPackage() { // FIXME: doesn't load anything
-		Reflections filterPackage = new Reflections("net.clonecomputers.lab.queueing.calculate.filters");
-		Set<Class<? extends Filter>> filtersInPackage = filterPackage.getSubTypesOf(Filter.class);
+		Set<Class<? extends Filter>> filtersInPackage = findAllImplementations("net.clonecomputers.lab.queueing.calculate.filters", Filter.class);
 		filters = new HashSet<Filter>();
 		for(Class<? extends Filter> a : filtersInPackage) {
 			try {
@@ -228,42 +276,121 @@ public class StatsMain {
 	private void initFilterGUI() {
 		filterList = new JList(filters.toArray());
 		filterList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-		filterList.setCellRenderer(new DefaultListCellRenderer() {         // what is this about?  -Gavin
+		filterList.setCellRenderer(new DefaultListCellRenderer() {
 			
 			public Component getListCellRendererComponent(JList list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
 				return super.getListCellRendererComponent(list, value.getClass().getSimpleName(), index, isSelected, cellHasFocus);
 			}
 			
 		});
-		activeFilterList = new JList();
-		activeFilterList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-		activeFilterList.setCellRenderer(new DefaultListCellRenderer() {         // what is this about?  -Gavin
-			
+		
+		final JList activeFilterJList = new JList();
+		activeFilterJList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+		activeFilterJList.setCellRenderer(new DefaultListCellRenderer() {
 			public Component getListCellRendererComponent(JList list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
 				return super.getListCellRendererComponent(list, value.getClass().getSimpleName(), index, isSelected, cellHasFocus);
 			}
-			
 		});
-		filterPanel.setLayout(new BorderLayout());
-		JPanel buttonPanel = new JPanel(new BorderLayout());
-		JPanel dPad = new JPanel(new GridLayout(3, 3));
+		activeFilterJList.setModel(new AbstractListModel() {
+			@Override public int getSize() {
+				return activeFilters.size();
+			}
+			@Override public Object getElementAt(int i) {
+				return activeFilters.get(i);
+			}
+		});
+		
+		filterPanel.setLayout(new BoxLayout(filterPanel,BoxLayout.LINE_AXIS));
+		JPanel buttonPanel = new JPanel();
+		buttonPanel.setLayout(new BoxLayout(buttonPanel, BoxLayout.PAGE_AXIS));
+		JPanel navigationPanel = new JPanel();
+		navigationPanel.setLayout(new BoxLayout(navigationPanel,BoxLayout.PAGE_AXIS));
 		
 		JButton up = new JButton("↑");
 		JButton down = new JButton("↓");
 		JButton insert = new JButton("→");
-		JButton delete = new JButton("←");
+		JButton delete = new JButton("⌫");
 		JButton filter = new JButton("Filter!");
 		
-		buttonPanel.add(up, BorderLayout.NORTH);
-		buttonPanel.add(down, BorderLayout.SOUTH);
-		buttonPanel.add(insert, BorderLayout.EAST);
-		buttonPanel.add(delete, BorderLayout.WEST);
+		up.setPreferredSize(new Dimension(20,20));
+		down.setPreferredSize(new Dimension(20,20));
+		delete.setPreferredSize(new Dimension(20,20));
+		insert.setPreferredSize(new Dimension(20,20));
+		//filter.setPreferredSize(new Dimension(50,20));
 		
-		//TODO: add listeners to motion buttons so they do stuff
+		navigationPanel.add(up);
+		navigationPanel.add(down);
+		navigationPanel.add(Box.createVerticalGlue());
+		navigationPanel.add(delete);
+
+		JPanel x = new JPanel();
+		x.setLayout(new BoxLayout(x, BoxLayout.LINE_AXIS));
+		x.add(Box.createHorizontalGlue());
+		x.add(insert);
+		x.add(Box.createHorizontalGlue());
+		buttonPanel.add(x);
+		buttonPanel.add(Box.createVerticalGlue());
+		buttonPanel.add(filter);
+		//FIXME: fix alignment problems in butttonPanel
 		
-		filterPanel.add(new JScrollPane(filterList),BorderLayout.LINE_START);
-		filterPanel.add(new JScrollPane(activeFilterList),BorderLayout.LINE_END);
-		filterPanel.add(buttonPanel, BorderLayout.CENTER);
+		insert.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				activeFilters.add((Filter)filterList.getSelectedValue());
+				activeFilterJList.updateUI();
+			}
+		});
+		delete.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent arg0) {
+				int i = activeFilterJList.getSelectedIndex();
+				if(i == -1) return;
+				activeFilters.remove(i);
+				activeFilterJList.clearSelection();
+				activeFilterJList.updateUI();
+			}
+		});
+		up.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				int i = activeFilterJList.getSelectedIndex();
+				if(i == 0 || i == -1) return;
+				Filter f = activeFilters.get(i);
+				activeFilters.set(i, activeFilters.get(i-1));
+				activeFilters.set(i-1, f);
+				activeFilterJList.setSelectedIndex(i-1);
+				activeFilterJList.updateUI();
+			}
+		});
+		down.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				int i = activeFilterJList.getSelectedIndex();
+				if(i == activeFilters.size()-1 || i == -1) return;
+				Filter f = activeFilters.get(i);
+				activeFilters.set(i, activeFilters.get(i+1));
+				activeFilters.set(i+1, f);
+				activeFilterJList.setSelectedIndex(i+1);
+				activeFilterJList.updateUI();
+			}
+		});
+		filter.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent arg0) {
+				filterData();
+			}
+		});
+		
+		filterPanel.add(new JScrollPane(filterList));
+		filterPanel.add(buttonPanel);
+		filterPanel.add(new JScrollPane(activeFilterJList));
+		filterPanel.add(navigationPanel);
+	}
+
+	public void filterData() {
+		for(Filter f: activeFilters){
+			data = f.processEvents(data);
+		}
 	}
 
 	private void generateData() throws IOException, InterruptedException, InvocationTargetException{
@@ -315,7 +442,7 @@ public class StatsMain {
 		loadCsvData(new BufferedReader(new FileReader(csv)));
 	}
 	
-	private void loadCsvData(Reader csvInput) throws IOException {
+	private void loadCsvData(Reader csvInput) throws IOException { //FIXME: doesn't properly load time for first snapshot
 		CSVParser parser = new CSVParser(csvInput, CSVFormat.EXCEL
 				.withSkipHeaderRecord(true).withHeader().withIgnoreEmptyLines(true));
 		DataSnapshot[] tempData = null;
@@ -367,7 +494,7 @@ public class StatsMain {
 		}
 	}
 	
-	SimulationData getData() {
+	public SimulationData getData() {
 		return data;
 	}
 	
