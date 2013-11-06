@@ -40,8 +40,6 @@ public class StatsMain {
 	private AbstractAnalyzer showing = null;
 	
 	private Set<Filter> filters;
-	private JList filterList;
-	private java.util.List<Filter> activeFilters = new ArrayList<Filter>();
 
 	public static void main(String[] args) {
 		final StatsMain app = new StatsMain();
@@ -246,7 +244,7 @@ public class StatsMain {
 	}
 	
 	public void filterData() {
-		for(Filter f: activeFilters){
+		for(Filter f: filterPanel.getActiveFilters()){
 			data = f.processEvents(data);
 		}
 	}

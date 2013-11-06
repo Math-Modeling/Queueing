@@ -12,7 +12,7 @@ import net.clonecomputers.lab.queueing.calculate.filters.*;
 
 @SuppressWarnings("serial")
 public class FilterPanel extends JPanel {
-	private List<Filter> activeFilters;
+	private List<Filter> activeFilters = new ArrayList<Filter>();
 	private JList filterList;
 	private StatsMain main;
 	
@@ -132,5 +132,9 @@ public class FilterPanel extends JPanel {
 		this.add(buttonPanel);
 		this.add(new JScrollPane(activeFilterJList));
 		this.add(navigationPanel);
+	}
+
+	public List<Filter> getActiveFilters() {
+		return activeFilters;
 	}
 }
