@@ -54,30 +54,8 @@ public class StatsMain {
 		});
 	}
 	
-	private static <T> HashSet<Class<? extends T>> findAllImplementations(String p, Class<T> superclass){
-		List<ClassLoader> classLoadersList = new LinkedList<ClassLoader>();
-        classLoadersList.add(ClasspathHelper.contextClassLoader());
-        classLoadersList.add(ClasspathHelper.staticClassLoader());
-                       
-        Reflections ref = new Reflections(new ConfigurationBuilder()
-            .setScanners(new SubTypesScanner(false /* don't exclude Object.class */), new ResourcesScanner())
-            .setUrls(ClasspathHelper.forClassLoader(classLoadersList.toArray(new ClassLoader[0]))));
-        
-		HashSet<Class<? extends T>> allImpl = new HashSet<Class<? extends T>>();
-		Set<Class<? extends T>> allClasses = ref.getSubTypesOf(superclass);
-		for(Class<? extends T> c: allClasses){
-			if(superclass.isAssignableFrom(c) &&
-					!c.isInterface() &&
-					!c.isAnonymousClass() &&
-					!Modifier.isAbstract(c.getModifiers())){
-				allImpl.add(c);
-			}
-		}
-		return allImpl;
-	}
-	
 	private void loadAnalyzersFromDefaultPackage() {
-		Set<Class<? extends AbstractAnalyzer>> analyzersInPackage = findAllImplementations("net.clonecomputers.lab.queueing.calculate.analyzers", AbstractAnalyzer.class);
+		Set<Class<? extends AbstractAnalyzer>> analyzersInPackage = ReflectionsHelper.findAllImplementations(AbstractAnalyzer.class);
 		analyzers = new HashSet<AbstractAnalyzer>();
 		for(Class<? extends AbstractAnalyzer> a : analyzersInPackage) {
 			try {
@@ -95,7 +73,7 @@ public class StatsMain {
 	}
 	
 	private void loadFiltersFromDefaultPackage() {
-		Set<Class<? extends Filter>> filtersInPackage = findAllImplementations("net.clonecomputers.lab.queueing.calculate.filters", Filter.class);
+		Set<Class<? extends Filter>> filtersInPackage = ReflectionsHelper.findAllImplementations(Filter.class);
 		filters = new HashSet<Filter>();
 		for(Class<? extends Filter> a : filtersInPackage) {
 			try {
