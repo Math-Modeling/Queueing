@@ -45,8 +45,12 @@
   
   <repositories>
   	<repository>
-  	  <id>thirdparty</id>
-  	  <url>http://gavin.clonecomputers.net:8081/nexus/content/repositories/thirdparty/</url>
+  	  <id>snapshots</id>
+  	  <url>https://repository.apache.org/content/groups/snapshots/</url>
+  	</repository>
+  	<repository>
+  	  <id>apache-commons</id>
+  	  <url>https://repository.apache.org/content/groups/snapshots/org/apache/commons/</url>
   	</repository>
   	<repository>
   	  <id>releases</id>
