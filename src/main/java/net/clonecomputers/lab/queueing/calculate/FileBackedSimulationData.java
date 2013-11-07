@@ -9,6 +9,45 @@ import org.apache.commons.csv.*;
 import org.apache.commons.io.*;
 
 public class FileBackedSimulationData implements SimulationData {
+	public static class Generator {
+		private final File f;
+		private final CSVPrinter csv;
+		public Generator() throws IOException {
+			f = File.createTempFile(
+					"net.clonecomputers.lab.queueing.calculate.FileBackedSimulationData.Generator", "csv");
+			csv = new CSVPrinter(new PrintStream(f), CSVFormat.EXCEL);
+			csv.printRecord("delta t","shopping","in line","at checkout",
+					"lambda","mu","number of cashiers","how long to run");
+		}
+		public void add(DataSnapshot event) {
+			try {
+				csv.printRecord(event.getTime(),event.getCustomersShopping(),
+						event.getQueueLength(),event.getCashiersBusy());
+			} catch (IOException e) {
+				throw new RuntimeException(e);
+			}
+		}
+		public void addAll(Collection<DataSnapshot> events){
+			for(DataSnapshot event: events) add(event);
+		}
+		public void addAll(DataSnapshot[] events){
+			for(DataSnapshot event: events) add(event);
+		}
+		public void addAll(Iterable<DataSnapshot> events){
+			for(DataSnapshot event: events) add(event);
+		}
+		public FileBackedSimulationData finish(double lambda, double mu, int numberOfCashiers, int length){
+			System.err.println("I have no idea how to print the simulation-wide data line");
+			try {
+				return new FileBackedSimulationData(f);
+			} catch (FileNotFoundException e) {
+				throw new RuntimeException(e);
+			} catch (IOException e) {
+				throw new RuntimeException(e);
+			}
+		}
+	}
+
 	private final File f;
 	private final double lambda;
 	private final double mu;
@@ -47,6 +86,7 @@ public class FileBackedSimulationData implements SimulationData {
 		DataSnapshot lastSnap = null;
 		public FileBackedSimulationDataIterator(Iterator<CSVRecord> i){
 			this.i = i;
+			i.next();
 		}
 		
 		@Override
@@ -81,13 +121,13 @@ public class FileBackedSimulationData implements SimulationData {
 	}
 	
 	private static DataSnapshot getSnap(CSVRecord data, QueueingEvent e){
-		return new DataSnapshot(Double.parseDouble(data.get("delta t")),Integer.parseInt(data.get("customers shopping")),
-				Integer.parseInt(data.get("queue length")),Integer.parseInt(data.get("cashiers busy")),e);
+		return new DataSnapshot(Double.parseDouble(data.get("delta t")),Integer.parseInt(data.get("shopping")),
+				Integer.parseInt(data.get("in line")),Integer.parseInt(data.get("at checkout")),e);
 	}
 	
 	private static DataSnapshot getSnap(CSVRecord data, DataSnapshot last){
-		return new DataSnapshot(Double.parseDouble(data.get("delta t")),Integer.parseInt(data.get("customers shopping")),
-				Integer.parseInt(data.get("queue length")),Integer.parseInt(data.get("cashiers busy")),last);
+		return new DataSnapshot(Double.parseDouble(data.get("delta t")),Integer.parseInt(data.get("shopping")),
+				Integer.parseInt(data.get("in line")),Integer.parseInt(data.get("at checkout")),last);
 	}
 
 	@Override
