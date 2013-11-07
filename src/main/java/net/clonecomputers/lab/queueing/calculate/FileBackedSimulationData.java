@@ -12,6 +12,7 @@ public class FileBackedSimulationData implements SimulationData {
 	public static class Generator {
 		private final File f;
 		private final CSVPrinter csv;
+		private int length;
 		public Generator() throws IOException {
 			f = File.createTempFile(
 					"net.clonecomputers.lab.queueing.calculate.FileBackedSimulationData.Generator", "csv");
@@ -20,6 +21,7 @@ public class FileBackedSimulationData implements SimulationData {
 					"lambda","mu","number of cashiers","how long to run");
 		}
 		public void add(DataSnapshot event) {
+			length++;
 			try {
 				csv.printRecord(event.getTime(),event.getCustomersShopping(),
 						event.getQueueLength(),event.getCashiersBusy());
@@ -36,7 +38,7 @@ public class FileBackedSimulationData implements SimulationData {
 		public void addAll(Iterable<DataSnapshot> events){
 			for(DataSnapshot event: events) add(event);
 		}
-		public FileBackedSimulationData finish(double lambda, double mu, int numberOfCashiers, int length){
+		public FileBackedSimulationData finish(double lambda, double mu, int numberOfCashiers){
 			System.err.println("I have no idea how to print the simulation-wide data line");
 			try {
 				return new FileBackedSimulationData(f);
