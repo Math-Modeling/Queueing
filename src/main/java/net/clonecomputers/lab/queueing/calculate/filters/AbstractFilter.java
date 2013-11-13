@@ -27,7 +27,7 @@ public abstract class AbstractFilter implements Filter {
 			List<DataSnapshot> newE = processEvent(e);
 			if(newE != null && newE.size() > 0) filteredHistory.addAll(newE);
 		}
-		return filteredHistory.finish(mu,lambda,numberOfCashiers);
+		return filteredHistory.finish(lambda,mu,numberOfCashiers);
 		//return new ArrayBackedSimulationData(filteredHistory.toArray(new DataSnapshot[0]), mu, lambda, numberOfCashiers);
 	}
 }
