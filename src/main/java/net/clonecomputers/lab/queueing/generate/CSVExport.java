@@ -3,12 +3,20 @@ package net.clonecomputers.lab.queueing.generate;
 import java.io.*;
 
 //import javax.swing.*;
-
 import org.apache.commons.csv.*;
 
 public class CSVExport {
 	private Queueing q;
 	private CSVPrinter csv;
+	
+	public static void printHeader(CSVPrinter csv) throws IOException {
+		csv.printRecord("delta t","shopping","in line","at checkout","lambda","mu","number of cashiers","how long to run");
+	}
+	
+	public static void printSimulationWideDataLine(CSVPrinter csv,
+			double lambda, double mu, int numCashiers, long dataLength) throws IOException {
+		csv.printRecord(null,null,null,null,lambda,mu,numCashiers,dataLength);
+	}
 	
 	public CSVExport(Queueing q){
 		this.q = q;
@@ -19,8 +27,8 @@ public class CSVExport {
 		//chooser.showSaveDialog(null);
 		//filepath = chooser.getSelectedFile();
 		csv = new CSVPrinter(output, CSVFormat.EXCEL);
-		csv.printRecord("delta t","shopping","in line","at checkout","lambda","mu","number of cashiers","how long to run");
-		csv.printRecord(null,null,null,null,q.lambda,q.mu, q.cashiers.length,q.maxIterations);
+		CSVExport.printHeader(csv);
+		CSVExport.printSimulationWideDataLine(csv, q.lambda, q.mu, q.cashiers.length, q.maxIterations);
 	}
 	
 	public void finishCSV() throws IOException {
