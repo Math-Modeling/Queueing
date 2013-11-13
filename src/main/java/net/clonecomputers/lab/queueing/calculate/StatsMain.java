@@ -5,7 +5,6 @@ import java.awt.event.*;
 import java.io.*;
 import java.lang.reflect.*;
 import java.util.*;
-import java.util.List;
 import java.util.concurrent.*;
 
 import javax.swing.*;
@@ -16,10 +15,6 @@ import net.clonecomputers.lab.queueing.calculate.analyzers.*;
 import net.clonecomputers.lab.queueing.calculate.filters.*;
 import net.clonecomputers.lab.queueing.generate.*;
 import net.clonecomputers.lab.util.*;
-
-import org.reflections.*;
-import org.reflections.scanners.*;
-import org.reflections.util.*;
 
 @SuppressWarnings("serial")
 public class StatsMain {
@@ -263,7 +258,7 @@ public class StatsMain {
 		
 		System.out.println("Importing CSV");
 		
-		data = new ArrayBackedSimulationData(new BufferedReader(pipeOutput));
+		data = new FileBackedSimulationData(new BufferedReader(pipeOutput));
 		
 		System.setIn(oldIn);
 		System.setOut(oldOut);

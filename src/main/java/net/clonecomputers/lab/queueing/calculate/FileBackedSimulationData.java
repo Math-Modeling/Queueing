@@ -8,6 +8,7 @@ import net.clonecomputers.lab.queueing.generate.*;
 
 import org.apache.commons.csv.*;
 import org.apache.commons.io.*;
+import org.apache.commons.io.input.*;
 import org.apache.commons.io.output.*;
 
 public class FileBackedSimulationData implements SimulationData {
@@ -118,6 +119,20 @@ public class FileBackedSimulationData implements SimulationData {
 		length = Long.parseLong(firstLine.get("how long to run"));
 	}
 	
+	public FileBackedSimulationData(Reader r) throws FileNotFoundException, IOException {
+		this(new ReaderInputStream(r));
+	}
+	public FileBackedSimulationData(InputStream source) throws FileNotFoundException, IOException{
+		this(getFile(source));
+	}
+	private static File getFile(InputStream source) throws IOException {
+		File tmpfile = File.createTempFile(
+			"net.clonecomputers.lab.queueing.calculate.FileBackedSimulationData.Generator", ".csv");
+		tmpfile.deleteOnExit();
+		FileUtils.copyInputStreamToFile(source, tmpfile);
+		return tmpfile;
+	}
+
 	private CSVParser newCSV() {
 		try {
 			return new CSVParser(new BufferedReader(new FileReader(f)), CSVExport.getFormat());
