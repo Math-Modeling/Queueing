@@ -1,24 +1,27 @@
 package net.clonecomputers.lab.queueing.calculate;
 
 import java.io.*;
+import java.nio.*;
+import java.nio.channels.*;
 import java.util.*;
 
 import net.clonecomputers.lab.queueing.calculate.DataSnapshot.QueueingEvent;
+import net.clonecomputers.lab.queueing.generate.*;
 
 import org.apache.commons.csv.*;
 import org.apache.commons.io.*;
+import org.apache.commons.io.output.*;
 
 public class FileBackedSimulationData implements SimulationData {
 	public static class Generator {
 		private final File f;
 		private final CSVPrinter csv;
-		private int length;
+		private long length;
 		public Generator() throws IOException {
 			f = File.createTempFile(
 					"net.clonecomputers.lab.queueing.calculate.FileBackedSimulationData.Generator", "csv");
 			csv = new CSVPrinter(new PrintStream(f), CSVFormat.EXCEL);
-			csv.printRecord("delta t","shopping","in line","at checkout",
-					"lambda","mu","number of cashiers","how long to run");
+			CSVExport.printHeader(csv);
 		}
 		public void add(DataSnapshot event) {
 			length++;
@@ -39,15 +42,35 @@ public class FileBackedSimulationData implements SimulationData {
 			for(DataSnapshot event: events) add(event);
 		}
 		public FileBackedSimulationData finish(double lambda, double mu, int numberOfCashiers){
-			//TODO: Implement this
-			System.err.println("I have no idea how to print the simulation-wide data line");
-			try {
+			//FIXME: might not work (needs testing)
+			try{
+				FileOutputStream fos = new FileOutputStream(f);
+				FileChannel fc = fos.getChannel();
+				fc.position(headerLength());
+				StringBuilderWriter output = new StringBuilderWriter();
+				CSVPrinter csv = new CSVPrinter(output, CSVFormat.EXCEL);
+				CSVExport.printSimulationWideDataLine(csv, lambda, mu, numberOfCashiers, length);
+				csv.flush();
+				csv.close();
+				fc.write(ByteBuffer.wrap(output.toString().getBytes()));
+				fos.close();
 				return new FileBackedSimulationData(f);
-			} catch (FileNotFoundException e) {
-				throw new RuntimeException(e);
-			} catch (IOException e) {
+			}catch(Exception e){
 				throw new RuntimeException(e);
 			}
+		}
+		
+		private static long headerLength() {
+			StringBuilderWriter output = new StringBuilderWriter();
+			CSVPrinter csv = new CSVPrinter(output, CSVFormat.EXCEL);
+			try{
+				CSVExport.printHeader(csv);
+				csv.flush();
+				csv.close();
+			}catch(IOException e){
+				throw new RuntimeException(e);
+			}
+			return output.toString().getBytes().length;
 		}
 	}
 
@@ -55,7 +78,7 @@ public class FileBackedSimulationData implements SimulationData {
 	private final double lambda;
 	private final double mu;
 	private final int numberOfCashiers;
-	private final int length;
+	private final long length;
 	private CSVParser currentCSV;
 	
 	public FileBackedSimulationData(File f) throws IOException,FileNotFoundException {
@@ -65,7 +88,7 @@ public class FileBackedSimulationData implements SimulationData {
 		lambda = Double.parseDouble(firstLine.get("lambda"));
 		mu = Double.parseDouble(firstLine.get("mu"));
 		numberOfCashiers = Integer.parseInt(firstLine.get("number of cashiers"));
-		length = Integer.parseInt(firstLine.get("how long to run"));
+		length = Long.parseLong(firstLine.get("how long to run"));
 	}
 	
 	private CSVParser newCSV() {
@@ -149,7 +172,7 @@ public class FileBackedSimulationData implements SimulationData {
 	}
 
 	@Override
-	public int length() {
+	public long length() {
 		return length;
 	}
 
