@@ -26,7 +26,7 @@ public class ArrayBackedSimulationData implements SimulationData {
 	}
 	
 	public ArrayBackedSimulationData(Reader csvInput) throws IOException {
-		CSVParser parser = new CSVParser(csvInput, CSVFormat.EXCEL
+		CSVParser parser = new CSVParser(csvInput, CSVExport.getFormat()
 				.withSkipHeaderRecord(true).withHeader().withIgnoreEmptyLines(true));
 		DataSnapshot[] tempData = null;
 		double tempLambda, tempMu;
@@ -106,7 +106,7 @@ public class ArrayBackedSimulationData implements SimulationData {
 	}
 	
 	public void saveData(File f) throws IOException {
-		CSVPrinter csv = new CSVPrinter(new BufferedWriter(new FileWriter(f)), CSVFormat.EXCEL);
+		CSVPrinter csv = new CSVPrinter(new BufferedWriter(new FileWriter(f)), CSVExport.getFormat());
 		CSVExport.printHeader(csv);
 		CSVExport.printSimulationWideDataLine(csv, getLambda(),getMu(), getNumberOfCashiers(),length());
 		for(DataSnapshot s: data){

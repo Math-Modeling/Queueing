@@ -18,6 +18,10 @@ public class CSVExport {
 		csv.printRecord(null,null,null,null,lambda,mu,numCashiers,dataLength);
 	}
 	
+	public static CSVFormat getFormat(){
+		return CSVFormat.EXCEL.withSkipHeaderRecord(true).withHeader().withIgnoreEmptyLines(true);
+	}
+	
 	public CSVExport(Queueing q){
 		this.q = q;
 	}
