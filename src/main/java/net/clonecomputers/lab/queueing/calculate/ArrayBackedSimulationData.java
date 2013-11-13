@@ -3,6 +3,8 @@ package net.clonecomputers.lab.queueing.calculate;
 import java.io.*;
 import java.util.*;
 
+import net.clonecomputers.lab.queueing.generate.*;
+
 import org.apache.commons.csv.*;
 
 public class ArrayBackedSimulationData implements SimulationData {
@@ -105,8 +107,8 @@ public class ArrayBackedSimulationData implements SimulationData {
 	
 	public void saveData(File f) throws IOException {
 		CSVPrinter csv = new CSVPrinter(new BufferedWriter(new FileWriter(f)), CSVFormat.EXCEL);
-		csv.printRecord("delta t","shopping","in line","at checkout","lambda","mu","number of cashiers","how long to run");
-		csv.printRecord(null,null,null,null,getLambda(),getMu(), getNumberOfCashiers(),length());
+		CSVExport.printHeader(csv);
+		CSVExport.printSimulationWideDataLine(csv, getLambda(),getMu(), getNumberOfCashiers(),length());
 		for(DataSnapshot s: data){
 			csv.printRecord(s.getTime(),s.getCustomersShopping(),s.getQueueLength(),s.getCashiersBusy());
 		}
