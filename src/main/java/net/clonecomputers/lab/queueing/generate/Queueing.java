@@ -105,7 +105,7 @@ public class Queueing {
 			updateTime(intervalLength);
 			updateState();
 		}
-		System.out.printf("Completed in %s\n");
+		System.out.printf("Completed in %dms\n",System.currentTimeMillis()-startTime);
 	}
 
 	private void updateState() {
@@ -147,6 +147,8 @@ public class Queueing {
 	private double supermarketTime() {
 		if(extraTime){
 			return 15 + customersInQueue.size()/5.0;
+		}else if(false){
+			return Double.MAX_VALUE;
 		}else{
 			return 15;
 		}
