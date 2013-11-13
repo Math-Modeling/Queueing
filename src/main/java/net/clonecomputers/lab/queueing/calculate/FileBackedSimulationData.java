@@ -163,7 +163,9 @@ public class FileBackedSimulationData implements SimulationData {
 		
 		@Override
 		public DataSnapshot next() {
-			return getSnap(i.next(), lastSnap);
+			DataSnapshot thisSnap = getSnap(i.next(), lastSnap);
+			lastSnap = thisSnap;
+			return thisSnap;
 		}
 		
 		@Override
@@ -183,11 +185,11 @@ public class FileBackedSimulationData implements SimulationData {
 		return getSnap(i.next(),i.next());
 	}*/
 	
-	private static DataSnapshot getSnap(CSVRecord pastLine, CSVRecord data){
+	private static DataSnapshot getSnap(CSVRecord pastLine, CSVRecord data){ // unused for now
 		return getSnap(data,getSnap(pastLine,QueueingEvent.OTHER));
 	}
 	
-	private static DataSnapshot getSnap(CSVRecord data, QueueingEvent e){
+	private static DataSnapshot getSnap(CSVRecord data, QueueingEvent e){ // unused for now
 		return new DataSnapshot(Double.parseDouble(data.get("delta t")),Integer.parseInt(data.get("shopping")),
 				Integer.parseInt(data.get("in line")),Integer.parseInt(data.get("at checkout")),e);
 	}
