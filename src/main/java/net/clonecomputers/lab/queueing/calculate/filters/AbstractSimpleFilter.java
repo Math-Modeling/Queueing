@@ -20,7 +20,7 @@ public abstract class AbstractSimpleFilter extends AbstractFilter {
 		timeInProgress += e.getTime();
 		eventsInProgress.add(e.getEvent());
 		if(acceptEvent(e)) {
-			buffer =  Collections.singletonList(new DataSnapshot(timeInProgress + e.getTime(),
+			buffer =  Collections.singletonList(new DataSnapshot(timeInProgress,
 					e.getCustomersShopping(), e.getQueueLength(), e.getCashiersBusy(), eventsInProgress));
 			timeInProgress = 0;
 			eventsInProgress.clear();
