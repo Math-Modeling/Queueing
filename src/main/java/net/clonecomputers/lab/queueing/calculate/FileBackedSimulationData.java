@@ -1,8 +1,6 @@
 package net.clonecomputers.lab.queueing.calculate;
 
 import java.io.*;
-import java.nio.*;
-import java.nio.channels.*;
 import java.util.*;
 
 import net.clonecomputers.lab.queueing.calculate.DataSnapshot.QueueingEvent;
@@ -17,11 +15,25 @@ public class FileBackedSimulationData implements SimulationData {
 		private final File f;
 		private final CSVPrinter csv;
 		private long length;
+		private static final int MAX_HEADER_LENGTH_IN_BYTES = 300;
 		public Generator() throws IOException {
 			f = File.createTempFile(
-					"net.clonecomputers.lab.queueing.calculate.FileBackedSimulationData.Generator", "csv");
-			csv = new CSVPrinter(new PrintStream(f), CSVFormat.EXCEL);
-			CSVExport.printHeader(csv);
+					"net.clonecomputers.lab.queueing.calculate.FileBackedSimulationData.Generator", ".csv");
+			f.deleteOnExit();
+			CSVPrinter tmpcsv = new CSVPrinter(new PrintStream(f), CSVExport.getFormat());
+			CSVExport.printHeader(tmpcsv);
+			tmpcsv.flush();
+			tmpcsv.close();
+			//RandomAccessFile rf = new RandomAccessFile(f, "rw");
+			//rf.setLength(rf.length()-CSVExport.getFormat().getRecordSeparator().getBytes().length); // delete last char
+			//rf.close();
+			FileOutputStream fos = new FileOutputStream(f,true);
+			for(int i = 0; i < MAX_HEADER_LENGTH_IN_BYTES; i+=" ".getBytes().length){
+				fos.write(" ".getBytes()); // extra spaces are set to be ignored
+			}
+			fos.write(CSVExport.getFormat().getRecordSeparator().getBytes());
+			fos.close();
+			csv = new CSVPrinter(new PrintStream(new FileOutputStream(f,true)), CSVExport.getFormat());
 		}
 		public void add(DataSnapshot event) {
 			length++;
@@ -44,16 +56,18 @@ public class FileBackedSimulationData implements SimulationData {
 		public FileBackedSimulationData finish(double lambda, double mu, int numberOfCashiers){
 			//FIXME: might not work (needs testing)
 			try{
-				FileOutputStream fos = new FileOutputStream(f);
-				FileChannel fc = fos.getChannel();
-				fc.position(headerLength());
+				RandomAccessFile rf = new RandomAccessFile(f, "rw");
+				rf.seek(headerLength());
 				StringBuilderWriter output = new StringBuilderWriter();
-				CSVPrinter csv = new CSVPrinter(output, CSVFormat.EXCEL);
+				CSVPrinter csv = new CSVPrinter(output, CSVExport.getFormat());
 				CSVExport.printSimulationWideDataLine(csv, lambda, mu, numberOfCashiers, length);
 				csv.flush();
 				csv.close();
-				fc.write(ByteBuffer.wrap(output.toString().getBytes()));
-				fos.close();
+				rf.write(output.toString().getBytes(),0,
+						output.toString().getBytes().length -
+						CSVExport.getFormat().getRecordSeparator().getBytes().length);
+				rf.close();
+				normalizeCSV(f);
 				return new FileBackedSimulationData(f);
 			}catch(Exception e){
 				throw new RuntimeException(e);
@@ -62,7 +76,7 @@ public class FileBackedSimulationData implements SimulationData {
 		
 		private static long headerLength() {
 			StringBuilderWriter output = new StringBuilderWriter();
-			CSVPrinter csv = new CSVPrinter(output, CSVFormat.EXCEL);
+			CSVPrinter csv = new CSVPrinter(output, CSVExport.getFormat());
 			try{
 				CSVExport.printHeader(csv);
 				csv.flush();
@@ -72,6 +86,19 @@ public class FileBackedSimulationData implements SimulationData {
 			}
 			return output.toString().getBytes().length;
 		}
+	}
+	
+	private static void normalizeCSV(File f) throws IOException {
+		File f2 = File.createTempFile(
+				"net.clonecomputers.lab.queueing.calculate.FileBackedSimulationData.Generator", ".csv");
+		f2.deleteOnExit();
+		CSVPrinter printer = new CSVPrinter(new PrintStream(f2), CSVFormat.EXCEL); // intentionally CSVFormat.EXCEL
+		CSVParser parser = new CSVParser(new FileReader(f), CSVExport.getFormat()
+				.withSkipHeaderRecord(false).withHeader((String[])null));
+		printer.printRecords(parser);
+		printer.close();
+		FileUtils.copyFile(f2, f);
+		f2.delete();
 	}
 
 	private final File f;
@@ -93,8 +120,7 @@ public class FileBackedSimulationData implements SimulationData {
 	
 	private CSVParser newCSV() {
 		try {
-			return new CSVParser(new BufferedReader(new FileReader(f)), CSVFormat.EXCEL.withIgnoreEmptyLines(true)
-							.withHeader().withSkipHeaderRecord(true));
+			return new CSVParser(new BufferedReader(new FileReader(f)), CSVExport.getFormat());
 		} catch (FileNotFoundException e) {
 			throw new RuntimeException(e);
 		} catch (IOException e) {
