@@ -19,7 +19,8 @@ public class CSVExport {
 	}
 	
 	public static CSVFormat getFormat(){
-		return CSVFormat.EXCEL.withSkipHeaderRecord(true).withHeader().withIgnoreEmptyLines(true);
+		return CSVFormat.EXCEL.withSkipHeaderRecord(true).withHeader()
+				.withIgnoreEmptyLines(true).withIgnoreSurroundingSpaces(true);
 	}
 	
 	public CSVExport(Queueing q){
