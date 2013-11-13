@@ -264,8 +264,8 @@ public class StatsMain {
 		System.setOut(oldOut);
 		System.setErr(oldErr);
 
-		consoleWindow.dispose();
-		JOptionPane.showMessageDialog(filterPanel, "Successfully generated data!");
+		//consoleWindow.dispose();
+		//JOptionPane.showMessageDialog(filterPanel, "Successfully generated data!");
 	}
 	
 	public SimulationData getData() {
