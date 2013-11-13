@@ -80,10 +80,10 @@ public class ArrayBackedSimulationData implements SimulationData {
 		}
 	}
 	
-	/*public DataSnapshot get(int index) {
+	public DataSnapshot get(int index) throws ArrayIndexOutOfBoundsException {
 		if(index >= data.length) throw new ArrayIndexOutOfBoundsException(index);
 		return data[index];
-	}*/
+	}
 	
 	public double getLambda() {
 		return lambda;
