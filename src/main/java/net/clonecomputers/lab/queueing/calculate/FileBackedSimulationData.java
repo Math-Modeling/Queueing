@@ -39,6 +39,7 @@ public class FileBackedSimulationData implements SimulationData {
 			for(DataSnapshot event: events) add(event);
 		}
 		public FileBackedSimulationData finish(double lambda, double mu, int numberOfCashiers){
+			//TODO: Implement this
 			System.err.println("I have no idea how to print the simulation-wide data line");
 			try {
 				return new FileBackedSimulationData(f);
