@@ -7,6 +7,6 @@ public interface SimulationData extends Iterable<DataSnapshot> {
 	public double getLambda();
 	public double getMu();
 	public int getNumberOfCashiers();
-	public int length();
+	public long length();
 	public void saveData(File dataFile) throws IOException;
 }

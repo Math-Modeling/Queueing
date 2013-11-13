@@ -1,8 +1,7 @@
 package net.clonecomputers.lab.queueing.calculate;
 
 import java.io.*;
-import java.util.Iterator;
-import java.util.NoSuchElementException;
+import java.util.*;
 
 import org.apache.commons.csv.*;
 
@@ -96,7 +95,7 @@ public class ArrayBackedSimulationData implements SimulationData {
 		return numCashiers;
 	}
 	
-	public int length() {
+	public long length() {
 		return data.length;
 	}
 	
