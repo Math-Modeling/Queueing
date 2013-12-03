@@ -263,6 +263,8 @@ public class StatsMain {
 		System.setIn(oldIn);
 		System.setOut(oldOut);
 		System.setErr(oldErr);
+		
+		guiConsole.getOut().println("Done");
 
 		//consoleWindow.dispose();
 		//JOptionPane.showMessageDialog(filterPanel, "Successfully generated data!");
