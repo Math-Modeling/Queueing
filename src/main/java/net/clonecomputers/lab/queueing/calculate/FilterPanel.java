@@ -15,6 +15,7 @@ public class FilterPanel extends JPanel {
 	private List<Filter> activeFilters = new ArrayList<Filter>();
 	private JList filterList;
 	private StatsMain main;
+	private JButton preferredDefaultButton;
 	
 	public FilterPanel(StatsMain main){
 		this.main = main;
@@ -52,12 +53,14 @@ public class FilterPanel extends JPanel {
 		buttonPanel.setLayout(new BoxLayout(buttonPanel, BoxLayout.PAGE_AXIS));
 		JPanel navigationPanel = new JPanel();
 		navigationPanel.setLayout(new BoxLayout(navigationPanel,BoxLayout.PAGE_AXIS));
+		navigationPanel.setBackground(Color.WHITE);
 		
 		JButton up = new JButton("↑");
 		JButton down = new JButton("↓");
 		JButton insert = new JButton("→");
 		JButton delete = new JButton("⌫");
 		JButton filter = new JButton("Filter!");
+		this.preferredDefaultButton = filter;
 		
 		up.setPreferredSize(new Dimension(20,20));
 		down.setPreferredSize(new Dimension(20,20));
@@ -70,14 +73,22 @@ public class FilterPanel extends JPanel {
 		navigationPanel.add(Box.createVerticalGlue());
 		navigationPanel.add(delete);
 
-		JPanel x = new JPanel();
-		x.setLayout(new BoxLayout(x, BoxLayout.LINE_AXIS));
-		x.add(Box.createHorizontalGlue());
-		x.add(insert);
-		x.add(Box.createHorizontalGlue());
-		buttonPanel.add(x);
+		JPanel insertPanel = new JPanel();
+		insertPanel.setLayout(new BoxLayout(insertPanel, BoxLayout.LINE_AXIS));
+		insertPanel.add(Box.createHorizontalGlue());
+		insertPanel.add(insert);
+		insertPanel.add(Box.createHorizontalGlue());
+		
+		JPanel filterPanel = new JPanel();
+		filterPanel.setLayout(new BoxLayout(filterPanel, BoxLayout.LINE_AXIS));
+		filterPanel.add(Box.createHorizontalGlue());
+		filterPanel.add(filter);
+		filterPanel.add(Box.createHorizontalGlue());
+
 		buttonPanel.add(Box.createVerticalGlue());
-		buttonPanel.add(filter);
+		buttonPanel.add(insertPanel);
+		buttonPanel.add(Box.createVerticalGlue());
+		buttonPanel.add(filterPanel);
 		//FIXME: fix alignment problems in butttonPanel
 		
 		insert.addActionListener(new ActionListener() {
@@ -136,5 +147,13 @@ public class FilterPanel extends JPanel {
 
 	public List<Filter> getActiveFilters() {
 		return activeFilters;
+	}
+	
+	public void activate() {
+		this.getRootPane().setDefaultButton(this.preferredDefaultButton);
+	}
+	
+	public void deactivate() {
+		
 	}
 }

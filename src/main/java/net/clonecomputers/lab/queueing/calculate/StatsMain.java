@@ -171,9 +171,15 @@ public class StatsMain {
 				Component[] comps = mainPanel.getComponents();
 				boolean b = false;
 				for(Component c: comps) if(c.equals(analyzePanel)) b = true;
-				mainPanel.remove(analyzePanel);
-				mainPanel.remove(filterPanel);
-				if(!b) mainPanel.add(analyzePanel, BorderLayout.CENTER);
+				if(b) {
+					mainPanel.remove(analyzePanel);
+					//analyzePanel.deactivate();
+				} else {
+					filterPanel.deactivate();
+					mainPanel.remove(filterPanel);
+					mainPanel.add(analyzePanel, BorderLayout.CENTER);
+					//analyzePanel.activate();
+				}
 				mainPanel.validate();
 				mainWindow.pack();
 			}
@@ -185,9 +191,15 @@ public class StatsMain {
 				Component[] comps = mainPanel.getComponents();
 				boolean b = false;
 				for(Component c: comps) if(c.equals(filterPanel)) b = true;
-				mainPanel.remove(analyzePanel);
-				mainPanel.remove(filterPanel);
-				if(!b) mainPanel.add(filterPanel, BorderLayout.CENTER);
+				if(b) {
+					mainPanel.remove(filterPanel);
+					filterPanel.deactivate();
+				} else {
+					//analyzePanel.deactivate();
+					mainPanel.remove(analyzePanel);
+					mainPanel.add(filterPanel, BorderLayout.CENTER);
+					filterPanel.activate();
+				}
 				mainPanel.validate();
 				mainWindow.pack();
 			}
